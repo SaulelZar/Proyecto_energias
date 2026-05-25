@@ -9,7 +9,9 @@ import {
 
     dischargeBattery,
 
-    batteryEnergy
+    batteryEnergy,
+
+    batterySOCPercent
 
 } from './battery.js';
 
@@ -26,27 +28,75 @@ export function simulateEnergySystem({
 
     battery,
 
-    hourlyConsumption
+    hourlyConsumption = []
 
 }) {
+
+    // ========================================
+    // VALIDACIONES
+    // ========================================
+
+    if (!solarSimulation?.hourly) {
+
+        throw new Error(
+            'Invalid solar simulation'
+        );
+    }
+
 
     const results = [];
 
 
+    // ========================================
+    // ACUMULADOS
+    // ========================================
+
+    let totalSolarEnergy = 0;
+
+    let totalConsumption = 0;
+
+    let totalGridImport = 0;
+
+    let totalGridExport = 0;
+
+    let totalBatteryCharge = 0;
+
+    let totalBatteryDischarge = 0;
+
+
+    // ========================================
+    // LOOP HORARIO
+    // ========================================
+
     for (let hour = 0; hour < 24; hour++) {
 
+        // ====================================
+        // PRODUCCION SOLAR
+        // ====================================
+
         const solarPower =
-            solarSimulation.hourly[hour].power || 0;
+
+            solarSimulation
+            .hourly[hour]
+            ?.power || 0;
 
 
-        // W -> kWh por hora
+        // W -> kWh
         const solarEnergy =
             solarPower / 1000;
 
 
+        // ====================================
+        // CONSUMO
+        // ====================================
+
         const consumption =
             hourlyConsumption[hour] || 0;
 
+
+        // ====================================
+        // VARIABLES
+        // ====================================
 
         let batteryCharge = 0;
 
@@ -56,6 +106,10 @@ export function simulateEnergySystem({
 
         let gridExport = 0;
 
+
+        // ====================================
+        // BALANCE ENERGETICO
+        // ====================================
 
         const netEnergy =
             solarEnergy - consumption;
@@ -69,15 +123,20 @@ export function simulateEnergySystem({
 
             batteryCharge =
                 chargeBattery(
+
                     battery,
+
                     netEnergy
                 );
 
 
             gridExport =
                 Math.max(
+
                     0,
-                    netEnergy - batteryCharge
+
+                    netEnergy -
+                    batteryCharge
                 );
         }
 
@@ -86,7 +145,7 @@ export function simulateEnergySystem({
         // DEFICIT
         // ====================================
 
-        else {
+        else if (netEnergy < 0) {
 
             const deficit =
                 Math.abs(netEnergy);
@@ -94,18 +153,50 @@ export function simulateEnergySystem({
 
             batteryDischarge =
                 dischargeBattery(
+
                     battery,
+
                     deficit
                 );
 
 
             gridImport =
                 Math.max(
+
                     0,
-                    deficit - batteryDischarge
+
+                    deficit -
+                    batteryDischarge
                 );
         }
 
+
+        // ====================================
+        // ACUMULADOS
+        // ====================================
+
+        totalSolarEnergy +=
+            solarEnergy;
+
+        totalConsumption +=
+            consumption;
+
+        totalGridImport +=
+            gridImport;
+
+        totalGridExport +=
+            gridExport;
+
+        totalBatteryCharge +=
+            batteryCharge;
+
+        totalBatteryDischarge +=
+            batteryDischarge;
+
+
+        // ====================================
+        // RESULTADOS HORARIOS
+        // ====================================
 
         results.push({
 
@@ -115,11 +206,20 @@ export function simulateEnergySystem({
 
             consumption,
 
+            netEnergy,
+
             batterySOC:
                 battery.soc,
 
+            batterySOCPercent:
+                batterySOCPercent(
+                    battery
+                ),
+
             batteryEnergy:
-                batteryEnergy(battery),
+                batteryEnergy(
+                    battery
+                ),
 
             batteryCharge,
 
@@ -132,5 +232,43 @@ export function simulateEnergySystem({
     }
 
 
-    return results;
+    // ========================================
+    // RESULTADOS FINALES
+    // ========================================
+
+    return {
+
+        hourly: results,
+
+        summary: {
+
+            totalSolarEnergy,
+
+            totalConsumption,
+
+            totalGridImport,
+
+            totalGridExport,
+
+            totalBatteryCharge,
+
+            totalBatteryDischarge,
+
+            selfConsumptionRatio:
+
+                totalConsumption > 0
+
+                ?
+
+                (
+                    1 -
+                    totalGridImport /
+                    totalConsumption
+                )
+
+                :
+
+                0
+        }
+    };
 }

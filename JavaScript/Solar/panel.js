@@ -4,8 +4,15 @@
 // ============================================
 
 import {
-    deg2rad
+
+    deg2rad,
+
+    rad2deg,
+
+    clamp
+
 } from './geometry.js';
+
 
 
 
@@ -25,29 +32,150 @@ export function incidenceAngle(
 
 ) {
 
-    const zenithRad = deg2rad(zenith);
+    const zenithRad =
+        deg2rad(zenith);
 
-    const solarAzRad = deg2rad(solarAzimuth);
+    const solarAzRad =
+        deg2rad(solarAzimuth);
 
-    const tiltRad = deg2rad(panelTilt);
+    const tiltRad =
+        deg2rad(panelTilt);
 
-    const panelAzRad = deg2rad(panelAzimuth);
+    const panelAzRad =
+        deg2rad(panelAzimuth);
 
 
-    const cosTheta =
+    let cosTheta =
 
         Math.cos(zenithRad) *
+
         Math.cos(tiltRad)
 
         +
 
         Math.sin(zenithRad) *
+
         Math.sin(tiltRad) *
-        Math.cos(solarAzRad - panelAzRad);
+
+        Math.cos(
+            solarAzRad -
+            panelAzRad
+        );
 
 
-    return Math.acos(cosTheta) * 180 / Math.PI;
+    // ========================================
+    // ESTABILIDAD NUMERICA
+    // ========================================
+
+    cosTheta =
+        clamp(
+            cosTheta,
+            -1,
+            1
+        );
+
+
+    return rad2deg(
+
+        Math.acos(cosTheta)
+    );
 }
+
+
+
+
+// ============================================
+// COMPONENTE DIRECTA
+// ============================================
+
+export function beamComponent(
+
+    dni,
+
+    incidenceAngleDeg
+
+) {
+
+    const incidenceRad =
+        deg2rad(
+            incidenceAngleDeg
+        );
+
+
+    return Math.max(
+
+        0,
+
+        dni *
+        Math.cos(incidenceRad)
+    );
+}
+
+
+
+
+// ============================================
+// COMPONENTE DIFUSA
+// MODELO ISOTROPICO
+// ============================================
+
+export function diffuseComponent(
+
+    dhi,
+
+    panelTilt
+
+) {
+
+    const tiltRad =
+        deg2rad(panelTilt);
+
+
+    return (
+
+        dhi *
+
+        (
+            1 +
+            Math.cos(tiltRad)
+        ) / 2
+    );
+}
+
+
+
+
+// ============================================
+// COMPONENTE REFLEJADA
+// ============================================
+
+export function groundReflectedComponent(
+
+    ghi,
+
+    panelTilt,
+
+    albedo = 0.2
+
+) {
+
+    const tiltRad =
+        deg2rad(panelTilt);
+
+
+    return (
+
+        ghi *
+
+        albedo *
+
+        (
+            1 -
+            Math.cos(tiltRad)
+        ) / 2
+    );
+}
+
 
 
 
@@ -65,44 +193,60 @@ export function planeOfArrayIrradiance(
 
     incidenceAngleDeg,
 
-    panelTilt
+    panelTilt,
+
+    albedo = 0.2
 
 ) {
 
-    const incidenceRad =
-        deg2rad(incidenceAngleDeg);
-
-    const tiltRad =
-        deg2rad(panelTilt);
-
-
-    // Componente directa
     const beam =
-        dni * Math.cos(incidenceRad);
+
+        beamComponent(
+
+            dni,
+
+            incidenceAngleDeg
+        );
 
 
-    // Difusa isotrópica
     const diffuse =
-        dhi *
-        (1 + Math.cos(tiltRad)) / 2;
 
+        diffuseComponent(
 
-    // Reflejada por suelo
-    const albedo = 0.2;
+            dhi,
+
+            panelTilt
+        );
+
 
     const ground =
-        ghi *
-        albedo *
-        (1 - Math.cos(tiltRad)) / 2;
+
+        groundReflectedComponent(
+
+            ghi,
+
+            panelTilt,
+
+            albedo
+        );
 
 
-    return beam + diffuse + ground;
+    return Math.max(
+
+        0,
+
+        beam +
+        diffuse +
+        ground
+    );
 }
+
 
 
 
 // ============================================
 // TEMPERATURA DEL PANEL
+// MODELO NOCT
 // ============================================
 
 export function panelTemperature(
@@ -115,12 +259,18 @@ export function panelTemperature(
 
 ) {
 
-    return ambientTemp +
+    return (
+
+        ambientTemp +
+
         (
             (noct - 20) / 800
         ) *
-        poaIrradiance;
+
+        poaIrradiance
+    );
 }
+
 
 
 
@@ -138,14 +288,25 @@ export function thermalEfficiency(
 
 ) {
 
-    return nominalEfficiency *
+    const efficiency =
+
+        nominalEfficiency *
 
         (
             1 +
+
             tempCoefficient *
+
             (panelTemp - 25)
         );
+
+
+    return Math.max(
+        0,
+        efficiency
+    );
 }
+
 
 
 
@@ -163,9 +324,14 @@ export function generatedPower(
 
 ) {
 
-    return (
+    return Math.max(
+
+        0,
+
         poaIrradiance *
+
         panelArea *
+
         efficiency
     );
 }

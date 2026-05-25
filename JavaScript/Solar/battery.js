@@ -29,11 +29,30 @@ export function createBattery({
 
 }) {
 
+    // ========================================
+    // VALIDACIONES
+    // ========================================
+
+    if (capacityKWh <= 0) {
+
+        throw new Error(
+            'Battery capacity must be > 0'
+        );
+    }
+
+    if (initialSOC < 0 || initialSOC > 1) {
+
+        throw new Error(
+            'Initial SOC must be between 0 and 1'
+        );
+    }
+
+
     return {
 
         capacityKWh,
 
-        soc: initialSOC,
+        soc: clampSOC(initialSOC),
 
         maxChargePower,
 
@@ -45,9 +64,27 @@ export function createBattery({
 
         minSOC,
 
-        maxSOC
+        maxSOC,
+
+        cycles: 0
     };
 }
+
+
+
+
+// ============================================
+// LIMITAR SOC
+// ============================================
+
+export function clampSOC(soc) {
+
+    return Math.min(
+        1,
+        Math.max(0, soc)
+    );
+}
+
 
 
 
@@ -68,6 +105,53 @@ export function batteryEnergy(
 
 
 
+
+// ============================================
+// ESPACIO DISPONIBLE
+// ============================================
+
+export function availableChargeSpace(
+
+    battery
+) {
+
+    const maxEnergy =
+        battery.capacityKWh *
+        battery.maxSOC;
+
+
+    return Math.max(
+        0,
+        maxEnergy - batteryEnergy(battery)
+    );
+}
+
+
+
+
+// ============================================
+// ENERGIA DISPONIBLE
+// ============================================
+
+export function availableDischargeEnergy(
+
+    battery
+) {
+
+    const minEnergy =
+        battery.capacityKWh *
+        battery.minSOC;
+
+
+    return Math.max(
+        0,
+        batteryEnergy(battery) - minEnergy
+    );
+}
+
+
+
+
 // ============================================
 // CARGAR BATERIA
 // ============================================
@@ -79,17 +163,16 @@ export function chargeBattery(
     energyKWh
 ) {
 
-    const currentEnergy =
-        batteryEnergy(battery);
+    if (energyKWh <= 0) {
 
-
-    const maxEnergy =
-        battery.capacityKWh *
-        battery.maxSOC;
+        return 0;
+    }
 
 
     const availableSpace =
-        maxEnergy - currentEnergy;
+        availableChargeSpace(
+            battery
+        );
 
 
     const effectiveEnergy =
@@ -104,17 +187,23 @@ export function chargeBattery(
         );
 
 
+    const newEnergy =
+
+        batteryEnergy(battery)
+        +
+        chargedEnergy;
+
+
     battery.soc =
-        (
-            currentEnergy +
-            chargedEnergy
-        )
-        /
-        battery.capacityKWh;
+        clampSOC(
+            newEnergy /
+            battery.capacityKWh
+        );
 
 
     return chargedEnergy;
 }
+
 
 
 
@@ -129,17 +218,16 @@ export function dischargeBattery(
     energyNeededKWh
 ) {
 
-    const currentEnergy =
-        batteryEnergy(battery);
+    if (energyNeededKWh <= 0) {
 
-
-    const minEnergy =
-        battery.capacityKWh *
-        battery.minSOC;
+        return 0;
+    }
 
 
     const availableEnergy =
-        currentEnergy - minEnergy;
+        availableDischargeEnergy(
+            battery
+        );
 
 
     const requiredEnergy =
@@ -154,15 +242,72 @@ export function dischargeBattery(
         );
 
 
+    const newEnergy =
+
+        batteryEnergy(battery)
+        -
+        dischargedEnergy;
+
+
     battery.soc =
-        (
-            currentEnergy -
-            dischargedEnergy
-        )
-        /
-        battery.capacityKWh;
+        clampSOC(
+            newEnergy /
+            battery.capacityKWh
+        );
 
 
-    return dischargedEnergy *
-        battery.dischargeEfficiency;
+    return (
+
+        dischargedEnergy *
+        battery.dischargeEfficiency
+    );
+}
+
+
+
+
+// ============================================
+// PORCENTAJE SOC
+// ============================================
+
+export function batterySOCPercent(
+
+    battery
+) {
+
+    return battery.soc * 100;
+}
+
+
+
+
+// ============================================
+// BATERIA LLENA
+// ============================================
+
+export function isBatteryFull(
+
+    battery
+) {
+
+    return (
+        battery.soc >= battery.maxSOC
+    );
+}
+
+
+
+
+// ============================================
+// BATERIA VACIA
+// ============================================
+
+export function isBatteryEmpty(
+
+    battery
+) {
+
+    return (
+        battery.soc <= battery.minSOC
+    );
 }

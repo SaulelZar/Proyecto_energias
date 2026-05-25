@@ -1,45 +1,14 @@
 // ============================================
-// IMPORTS
+// main.js
+// Punto de entrada principal
 // ============================================
 
-import {
-
-    solarPosition
-
-} from './solar/geometry.js';
 
 
-import {
 
-    extraterrestrialIrradiance,
-
-    airMass,
-
-    atmosphericTransmittance,
-
-    directNormalIrradiance,
-
-    globalHorizontalIrradiance,
-
-    diffuseHorizontalIrradiance
-
-} from './solar/irradiance.js';
-
-
-import {
-
-    incidenceAngle,
-
-    planeOfArrayIrradiance,
-
-    panelTemperature,
-
-    thermalEfficiency,
-
-    generatedPower
-
-} from './solar/panel.js';
-
+// ============================================
+// IMPORTS
+// ============================================
 
 import {
 
@@ -75,7 +44,9 @@ import {
 
     createIrradianceChart,
 
-    createBatteryChart
+    createBatteryChart,
+
+    createTemperatureChart
 
 } from './ui/charts.js';
 
@@ -89,110 +60,11 @@ import {
 } from './utils/csv.js';
 
 
-
-
-// ============================================
-// CONFIGURACION GENERAL
-// ============================================
-
-const LATITUDE = 25.6866;
-
-const LONGITUDE = -100.3161;
-
-const ALTITUDE = 540;
-
-const STANDARD_MERIDIAN = -90;
-
-
-
-// ============================================
-// CLIMA HORARIO
-// ============================================
-
-const hourlyWeather =
-    await fetchHourlyWeather(
-
-        LATITUDE,
-
-        LONGITUDE
-    );
-
-
-
-console.log(
-    'CLIMA:',
-    hourlyWeather
-);
-
-
-
-
-// ============================================
-// SIMULACION SOLAR
-// ============================================
-
-const simulation =
-    simulateDay({
-
-        latitude: LATITUDE,
-
-        longitude: LONGITUDE,
-
-        altitude: ALTITUDE,
-
-        standardMeridian:
-            STANDARD_MERIDIAN,
-
-        panelTilt: 25,
-
-        panelAzimuth: 180,
-
-        panelArea: 4,
-
-        nominalEfficiency: 0.22,
-
-        hourlyWeather
-    });
-
-
-
-console.table(
-    simulation.hourly
-);
-
-
-console.log(
-
-    'Energia diaria:',
-
-    simulation.totalEnergyKWh,
-
-    'kWh'
-);
-
-
-
-
-// ============================================
-// BATERIA
-// ============================================
-
-const battery =
-    createBattery({
-
-        capacityKWh: 10,
-
-        initialSOC: 0.5
-    });
-
-
-
-
 // ============================================
 // CONSUMO DEFAULT
 // ============================================
 
-const hourlyConsumption = [
+const DEFAULT_CONSUMPTION = [
 
     0.4, 0.3, 0.3, 0.3,
 
@@ -211,55 +83,273 @@ const hourlyConsumption = [
 
 
 // ============================================
-// SIMULACION ENERGETICA
+// VARIABLES GLOBALES
 // ============================================
 
-let energyResults =
-    simulateEnergySystem({
+let simulation = null;
 
-        solarSimulation:
-            simulation,
+let energyResults = null;
 
-        battery,
+let hourlyWeather = [];
 
-        hourlyConsumption
+
+
+
+// ============================================
+// CREAR BATERIA
+// ============================================
+
+function buildBattery() {
+
+    return createBattery({
+
+        capacityKWh: 10,
+
+        initialSOC: 0.5
     });
-
-
-
-console.table(
-    energyResults
-);
+}
 
 
 
 
 // ============================================
-// GRAFICAS
+// SIMULACION PRINCIPAL
 // ============================================
 
-createPowerChart(
+async function runSimulation(
 
-    'powerChart',
+    hourlyConsumption =
+        DEFAULT_CONSUMPTION
 
-    simulation
-);
+) {
+
+    try {
+
+        // ====================================
+        // CLIMA
+        // ====================================
+
+        const config =
+            getConfigFromUI();
 
 
-createIrradianceChart(
+        hourlyWeather =
 
-    'irradianceChart',
+            await fetchHourlyWeather(
 
-    simulation
-);
+                config.latitude,
+
+                config.longitude
+            );
 
 
-createBatteryChart(
+        console.log(
+            'CLIMA:',
+            hourlyWeather
+        );
 
-    'batteryChart',
 
-    energyResults
-);
+        // ====================================
+        // SIMULACION SOLAR
+        // ====================================
+
+        simulation =
+
+            simulateDay({
+
+                ...CONFIG,
+
+                hourlyWeather
+            });
+
+
+        console.table(
+            simulation.hourly
+        );
+
+
+        console.log(
+
+            'Energia diaria:',
+
+            simulation.totalEnergyKWh,
+
+            'kWh'
+        );
+
+
+        // ====================================
+        // BATERIA
+        // ====================================
+
+        const battery =
+            buildBattery();
+
+
+        // ====================================
+        // SISTEMA ENERGETICO
+        // ====================================
+
+        energyResults =
+
+            simulateEnergySystem({
+
+                solarSimulation:
+                    simulation,
+
+                battery,
+
+                hourlyConsumption
+            });
+
+
+        console.table(
+            energyResults
+        );
+
+
+        // ====================================
+        // GRAFICAS
+        // ====================================
+
+        updateCharts();
+
+    } catch (error) {
+
+        console.error(
+            'Simulation error:',
+            error
+        );
+    }
+}
+
+
+// ============================================
+// LEER INPUT NUMERICO
+// ============================================
+
+function getInputValue(
+
+    id,
+
+    fallback = 0
+
+) {
+
+    const element =
+        document.getElementById(id);
+
+
+    if (!element) {
+
+        return fallback;
+    }
+
+
+    const value =
+        Number(element.value);
+
+
+    return isNaN(value)
+        ? fallback
+        : value;
+}
+
+
+
+
+// ============================================
+// CONFIGURACION DESDE UI
+// ============================================
+
+function getConfigFromUI() {
+
+    return {
+
+        latitude:
+            getInputValue(
+                'latitud',
+                25.6866
+            ),
+
+        longitude:
+            getInputValue(
+                'longitud',
+                -100.3161
+            ),
+
+        altitude:
+            getInputValue(
+                'altitud',
+                540
+            ),
+
+        standardMeridian: -90,
+
+        panelTilt:
+            getInputValue(
+                'inclinacion',
+                25
+            ),
+
+        panelAzimuth:
+            getInputValue(
+                'azimut',
+                180
+            ),
+
+        panelArea:
+            getInputValue(
+                'area',
+                4
+            ),
+
+        nominalEfficiency:
+            getInputValue(
+                'eficiencia',
+                22
+            ) / 100
+    };
+}
+
+
+// ============================================
+// ACTUALIZAR GRAFICAS
+// ============================================
+
+function updateCharts() {
+
+    createPowerChart(
+
+        'powerChart',
+
+        simulation
+    );
+
+
+    createIrradianceChart(
+
+        'irradianceChart',
+
+        simulation
+    );
+
+
+    createBatteryChart(
+
+        'batteryChart',
+
+        energyResults
+    );
+
+
+    createTemperatureChart(
+
+        'temperatureChart',
+
+        simulation
+    );
+}
 
 
 
@@ -268,108 +358,115 @@ createBatteryChart(
 // IMPORTACION CSV
 // ============================================
 
-const csvInput =
-    document.getElementById(
-        'csvInput'
-    );
+function setupCSVImport() {
+
+    const csvInput =
+
+        document.getElementById(
+            'csvInput'
+        );
 
 
+    if (!csvInput) {
 
-csvInput.addEventListener(
+        console.warn(
+            'CSV input not found'
+        );
 
-    'change',
-
-    async (event) => {
-
-        const file =
-            event.target.files[0];
-
-
-        if (!file) return;
+        return;
+    }
 
 
-        try {
+    csvInput.addEventListener(
 
-            // ================================
-            // LEER CSV
-            // ================================
+        'change',
 
-            const data =
-                await readCSV(file);
+        async (event) => {
 
-
-            console.log(
-                'CSV IMPORTADO:',
-                data
-            );
+            const file =
+                event.target.files[0];
 
 
-            // ================================
-            // PERFIL DE CONSUMO
-            // ================================
+            if (!file) return;
 
-            const profile =
-                consumptionProfile(
+
+            try {
+
+                // ============================
+                // LEER CSV
+                // ============================
+
+                const data =
+
+                    await readCSV(file);
+
+
+                console.log(
+                    'CSV:',
                     data
                 );
 
 
-            console.log(
-                'PERFIL:',
-                profile
-            );
+                // ============================
+                // PERFIL CONSUMO
+                // ============================
+
+                const profile =
+
+                    consumptionProfile(
+                        data
+                    );
 
 
-            // ================================
-            // REINICIAR BATERIA
-            // ================================
-
-            const updatedBattery =
-                createBattery({
-
-                    capacityKWh: 10,
-
-                    initialSOC: 0.5
-                });
+                console.log(
+                    'PROFILE:',
+                    profile
+                );
 
 
-            // ================================
-            // NUEVA SIMULACION
-            // ================================
+                // ============================
+                // RE-SIMULAR
+                // ============================
 
-            energyResults =
-                simulateEnergySystem({
+                await runSimulation(
+                    profile
+                );
 
-                    solarSimulation:
-                        simulation,
+            } catch (error) {
 
-                    battery:
-                        updatedBattery,
-
-                    hourlyConsumption:
-                        profile
-                });
-
-
-            console.table(
-                energyResults
-            );
-
-
-            // ================================
-            // ACTUALIZAR GRAFICA
-            // ================================
-
-            createBatteryChart(
-
-                'batteryChart',
-
-                energyResults
-            );
-
-        } catch (error) {
-
-            console.error(error);
+                console.error(
+                    'CSV error:',
+                    error
+                );
+            }
         }
-    }
-);
+    );
+}
+
+
+
+
+// ============================================
+// INIT APP
+// ============================================
+
+async function init() {
+
+    console.log(
+        'Inicializando simulador FV...'
+    );
+
+
+    setupCSVImport();
+
+    await runSimulation();
+}
+
+
+
+
+// ============================================
+// START
+// ============================================
+
+init();

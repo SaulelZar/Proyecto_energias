@@ -5,29 +5,83 @@
 
 
 
+
+// ============================================
+// CLAMP
+// ============================================
+
+function clamp(
+
+    value,
+
+    min,
+
+    max
+
+) {
+
+    return Math.min(
+        max,
+        Math.max(min, value)
+    );
+}
+
+
+
+
 // ============================================
 // FACTOR DE NUBOSIDAD
 // ============================================
 
-export function cloudFactor(cloudCover) {
+export function cloudFactor(
+
+    cloudCover
+
+) {
 
     // cloudCover: 0 - 100 %
 
-    return 1 - (cloudCover / 100) * 0.75;
+    const factor =
+
+        1 -
+
+        (cloudCover / 100) *
+        0.75;
+
+
+    return clamp(
+        factor,
+        0.1,
+        1
+    );
 }
 
 
 
+
 // ============================================
-// CORRECCION POR HUMEDAD
+// FACTOR DE HUMEDAD
 // ============================================
 
-export function humidityFactor(humidity) {
+export function humidityFactor(
 
-    // humedad relativa %
+    humidity
 
-    return 1 - humidity * 0.001;
+) {
+
+    const factor =
+
+        1 -
+        humidity * 0.001;
+
+
+    return clamp(
+        factor,
+        0.7,
+        1
+    );
 }
+
 
 
 
@@ -43,33 +97,51 @@ export function windCooling(
 
 ) {
 
-    return panelTemperature -
-        windSpeed * 0.5;
+    return (
+
+        panelTemperature -
+
+        windSpeed * 0.5
+    );
 }
 
 
 
+
 // ============================================
-// PERDIDAS POR LLUVIA
+// FACTOR DE LLUVIA
 // ============================================
 
-export function rainFactor(rainMM) {
+export function rainFactor(
+
+    rainMM
+
+) {
 
     if (rainMM <= 0) {
 
         return 1;
     }
 
-    return Math.max(
+
+    const factor =
+
+        1 -
+        rainMM * 0.02;
+
+
+    return clamp(
+        factor,
         0.7,
-        1 - rainMM * 0.02
+        1
     );
 }
 
 
 
+
 // ============================================
-// FACTOR CLIMATICO TOTAL
+// AJUSTE CLIMATICO TOTAL
 // ============================================
 
 export function weatherAdjustment({
@@ -96,6 +168,46 @@ export function weatherAdjustment({
     );
 }
 
+
+
+
+// ============================================
+// NORMALIZAR DATOS METEOROLOGICOS
+// ============================================
+
+export function normalizeWeatherData(
+
+    weatherData = {}
+
+) {
+
+    return {
+
+        temperature:
+
+            weatherData.temperature ?? 25,
+
+        humidity:
+
+            weatherData.humidity ?? 50,
+
+        cloudCover:
+
+            weatherData.cloudCover ?? 0,
+
+        windSpeed:
+
+            weatherData.windSpeed ?? 0,
+
+        rainMM:
+
+            weatherData.rainMM ?? 0
+    };
+}
+
+
+
+
 // ============================================
 // CLIMA HORARIO
 // ============================================
@@ -108,40 +220,94 @@ export async function fetchHourlyWeather(
 
 ) {
 
-    const url =
+    try {
 
-`https://api.open-meteo.com/v1/forecast
-?latitude=${latitude}
-&longitude=${longitude}
-&hourly=
-temperature_2m,
-relative_humidity_2m,
-cloud_cover,
-wind_speed_10m
-&forecast_days=1`;
+        const url =
+
+            `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m,relative_humidity_2m,cloud_cover,wind_speed_10m,precipitation&forecast_days=1`;
 
 
-    const response =
-        await fetch(url);
-
-    const data =
-        await response.json();
+        const response =
+            await fetch(url);
 
 
-    return data.hourly.time.map((time, index) => ({
+        if (!response.ok) {
 
-        time,
+            throw new Error(
+                'Weather API error'
+            );
+        }
 
-        temperature:
-            data.hourly.temperature_2m[index],
 
-        humidity:
-            data.hourly.relative_humidity_2m[index],
+        const data =
+            await response.json();
 
-        cloudCover:
-            data.hourly.cloud_cover[index],
 
-        windSpeed:
-            data.hourly.wind_speed_10m[index]
-    }));
+        return data.hourly.time.map(
+
+            (time, index) => ({
+
+                time,
+
+                temperature:
+
+                    data.hourly
+                    .temperature_2m[index],
+
+                humidity:
+
+                    data.hourly
+                    .relative_humidity_2m[index],
+
+                cloudCover:
+
+                    data.hourly
+                    .cloud_cover[index],
+
+                windSpeed:
+
+                    data.hourly
+                    .wind_speed_10m[index],
+
+                rainMM:
+
+                    data.hourly
+                    .precipitation[index]
+            })
+        );
+
+    } catch (error) {
+
+        console.error(
+
+            'Weather fetch failed:',
+
+            error
+        );
+
+
+        // ====================================
+        // FALLBACK
+        // ====================================
+
+        return Array.from(
+
+            { length: 24 },
+
+            (_, hour) => ({
+
+                hour,
+
+                temperature: 25,
+
+                humidity: 50,
+
+                cloudCover: 0,
+
+                windSpeed: 0,
+
+                rainMM: 0
+            })
+        );
+    }
 }

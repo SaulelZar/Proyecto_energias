@@ -4,7 +4,9 @@
 // ============================================
 
 import {
+
     solarPosition
+
 } from './geometry.js';
 
 
@@ -50,6 +52,7 @@ import {
 
 
 
+
 // ============================================
 // SIMULACION HORARIA
 // ============================================
@@ -78,22 +81,43 @@ export function simulateDay({
 
     date = new Date()
 
-
 }) {
-    const weatherFactor =
-    weatherAdjustment(weatherData);
 
     const results = [];
 
+
+    // ========================================
+    // ACUMULADOS
+    // ========================================
+
     let totalEnergyWh = 0;
 
+    let peakPower = 0;
+
+    let averageEfficiency = 0;
+
+
+    // ========================================
+    // LOOP HORARIO
+    // ========================================
 
     for (let hour = 0; hour < 24; hour++) {
 
-        const weatherData =
-            hourlyWeather[hour] || null;
+        // ====================================
+        // CLIMA
+        // ====================================
 
-        const currentDate = new Date(date);
+        const weatherData =
+            hourlyWeather[hour] || {};
+
+
+        // ====================================
+        // FECHA ACTUAL
+        // ====================================
+
+        const currentDate =
+            new Date(date);
+
 
         currentDate.setHours(hour);
 
@@ -106,30 +130,53 @@ export function simulateDay({
         // POSICION SOLAR
         // ====================================
 
-        const position = solarPosition(
+        const position =
 
-            currentDate,
+            solarPosition(
 
-            latitude,
+                currentDate,
 
-            longitude,
+                latitude,
 
-            standardMeridian
-        );
+                longitude,
+
+                standardMeridian
+            );
 
 
-        // Sol debajo del horizonte
+        // ====================================
+        // SOL BAJO HORIZONTE
+        // ====================================
+
         if (position.elevation <= 0) {
 
             results.push({
 
                 hour,
 
-                power: 0,
+                elevation:
+                    position.elevation,
+
+                azimuth:
+                    position.azimuth,
+
+                zenith:
+                    position.zenith,
+
+                dni: 0,
+
+                ghi: 0,
+
+                dhi: 0,
 
                 poa: 0,
 
-                elevation: position.elevation
+                power: 0,
+
+                efficiency: 0,
+
+                panelTemp:
+                    ambientTemperature
             });
 
             continue;
@@ -137,82 +184,106 @@ export function simulateDay({
 
 
         // ====================================
-        // IRRADIANCIA
+        // IRRADIANCIA EXTRATERRESTRE
         // ====================================
 
         const extraterrestrial =
+
             extraterrestrialIrradiance(
+
                 position.dayOfYear
             );
 
 
-        const am =
-            airMass(position.zenith);
+        // ====================================
+        // AIR MASS
+        // ====================================
 
+        const am =
+            airMass(
+                position.zenith
+            );
+
+
+        // ====================================
+        // TRANSMITANCIA
+        // ====================================
 
         const transmittance =
+
             atmosphericTransmittance(
+
                 am,
+
                 altitude
             );
 
 
         // ====================================
-        // IRRADIANCIA BASE
+        // DNI
         // ====================================
 
         const dni =
+
             directNormalIrradiance(
+
                 extraterrestrial,
+
                 transmittance
             );
 
+
+        // ====================================
+        // GHI
+        // ====================================
+
         const ghi =
+
             globalHorizontalIrradiance(
+
                 dni,
+
                 position.zenith
             );
+
+
+        // ====================================
+        // DHI
+        // ====================================
 
         const dhi =
             diffuseHorizontalIrradiance(
-                ghi,
-                dni,
-                position.zenith
+                ghi
             );
-
 
 
         // ====================================
         // AJUSTE CLIMATICO
         // ====================================
 
-        let correctedDNI = dni;
+        const weatherFactor =
 
-        let correctedGHI = ghi;
+            weatherAdjustment(
+                weatherData
+            );
 
-        let correctedDHI = dhi;
 
+        const correctedDNI =
+            dni * weatherFactor;
 
-        if (weatherData) {
+        const correctedGHI =
+            ghi * weatherFactor;
 
-            const weatherFactor =
-                weatherAdjustment(weatherData);
+        const correctedDHI =
+            dhi * weatherFactor;
 
-            correctedDNI =
-                dni * weatherFactor;
-
-            correctedGHI =
-                ghi * weatherFactor;
-
-            correctedDHI =
-                dhi * weatherFactor;
-        }
 
         // ====================================
-        // PANEL
+        // ANGULO INCIDENCIA
         // ====================================
 
         const incidence =
+
             incidenceAngle(
 
                 position.zenith,
@@ -225,49 +296,59 @@ export function simulateDay({
             );
 
 
+        // ====================================
+        // POA
+        // ====================================
+
         const poa =
-        planeOfArrayIrradiance(
 
-            correctedDNI,
+            planeOfArrayIrradiance(
 
-            correctedDHI,
+                correctedDNI,
 
-            correctedGHI,
+                correctedDHI,
 
-            incidence,
+                correctedGHI,
 
-            panelTilt
-        );
+                incidence,
+
+                panelTilt
+            );
 
 
         // ====================================
-        // TEMPERATURA
+        // TEMPERATURA PANEL
         // ====================================
+
+        const ambient =
+
+            weatherData.temperature
+            ??
+            ambientTemperature;
+
 
         let panelTemp =
+
             panelTemperature(
 
-                ambientTemperature,
+                ambient,
 
                 poa
             );
 
 
-
         // ====================================
-        // ENFRIAMIENTO POR VIENTO
+        // ENFRIAMIENTO VIENTO
         // ====================================
 
-        if (weatherData) {
+        panelTemp =
 
-            panelTemp =
-                windCooling(
+            windCooling(
 
-                    panelTemp,
+                panelTemp,
 
-                    weatherData.windSpeed || 0
-                );
-        }
+                weatherData.windSpeed || 0
+            );
 
 
         // ====================================
@@ -275,6 +356,7 @@ export function simulateDay({
         // ====================================
 
         const efficiency =
+
             thermalEfficiency(
 
                 nominalEfficiency,
@@ -288,6 +370,7 @@ export function simulateDay({
         // ====================================
 
         const power =
+
             generatedPower(
 
                 poa,
@@ -298,18 +381,47 @@ export function simulateDay({
             );
 
 
+        // ====================================
+        // ACUMULADOS
+        // ====================================
+
         totalEnergyWh += power;
 
+        peakPower =
+            Math.max(
+                peakPower,
+                power
+            );
+
+        averageEfficiency +=
+            efficiency;
+
+
+        // ====================================
+        // RESULTADOS
+        // ====================================
 
         results.push({
 
             hour,
 
-            elevation: position.elevation,
+            elevation:
+                position.elevation,
 
-            azimuth: position.azimuth,
+            azimuth:
+                position.azimuth,
 
-            zenith: position.zenith,
+            zenith:
+                position.zenith,
+
+            dni:
+                correctedDNI,
+
+            ghi:
+                correctedGHI,
+
+            dhi:
+                correctedDHI,
 
             poa,
 
@@ -317,10 +429,24 @@ export function simulateDay({
 
             efficiency,
 
-            panelTemp
+            panelTemp,
+
+            weatherFactor
         });
     }
 
+
+    // ========================================
+    // PROMEDIOS
+    // ========================================
+
+    averageEfficiency /=
+        24;
+
+
+    // ========================================
+    // RESULTADOS FINALES
+    // ========================================
 
     return {
 
@@ -329,6 +455,10 @@ export function simulateDay({
         totalEnergyWh,
 
         totalEnergyKWh:
-            totalEnergyWh / 1000
+            totalEnergyWh / 1000,
+
+        peakPower,
+
+        averageEfficiency
     };
 }

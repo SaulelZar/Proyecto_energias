@@ -1,364 +1,439 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulador Fotovoltaico Industrial</title>
 
-    <!-- Fuente -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
 
-    <!-- Chart.js -->
-    <script type="module" src="./js/main.js"></script>
+    <title>
+        Simulador Fotovoltaico Industrial
+    </title>
 
-    <style>
 
-        *{
-            margin:0;
-            padding:0;
-            box-sizing:border-box;
-        }
+    <!-- =====================================
+         FUENTES
+    ====================================== -->
 
-        body{
-            font-family:'Inter', sans-serif;
-            background:#f4f6f9;
-            color:#1f2937;
-        }
+    <link rel="preconnect"
+          href="https://fonts.googleapis.com">
 
-        /* =========================
-           HEADER
-        ==========================*/
+    <link rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossorigin>
 
-        header{
-            background:#0f172a;
-            color:white;
-            padding:20px 40px;
-            display:flex;
-            justify-content:space-between;
-            align-items:center;
-        }
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+          rel="stylesheet">
 
-        header h1{
-            font-size:1.8rem;
-            font-weight:700;
-        }
 
-        header p{
-            opacity:0.8;
-            font-size:0.95rem;
-        }
+    <!-- =====================================
+         CHART.JS
+    ====================================== -->
 
-        /* =========================
-           LAYOUT
-        ==========================*/
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-        .container{
-            display:grid;
-            grid-template-columns:350px 1fr;
-            min-height:calc(100vh - 80px);
-        }
 
-        /* =========================
-           SIDEBAR
-        ==========================*/
+    <!-- =====================================
+         CSS
+    ====================================== -->
 
-        .sidebar{
-            background:white;
-            padding:25px;
-            border-right:1px solid #d1d5db;
-            overflow-y:auto;
-        }
+    <link rel="stylesheet"
+          href="./css/styles.css">
 
-        .section{
-            margin-bottom:30px;
-        }
-
-        .section h2{
-            margin-bottom:15px;
-            font-size:1.1rem;
-            color:#0f172a;
-        }
-
-        .input-group{
-            margin-bottom:15px;
-        }
-
-        .input-group label{
-            display:block;
-            margin-bottom:6px;
-            font-size:0.9rem;
-            font-weight:500;
-        }
-
-        .input-group input,
-        .input-group select{
-            width:100%;
-            padding:10px;
-            border:1px solid #cbd5e1;
-            border-radius:8px;
-            font-size:0.95rem;
-        }
-
-        .input-group input:focus,
-        .input-group select:focus{
-            outline:none;
-            border-color:#2563eb;
-        }
-
-        button{
-            width:100%;
-            padding:12px;
-            border:none;
-            border-radius:10px;
-            background:#2563eb;
-            color:white;
-            font-size:1rem;
-            font-weight:600;
-            cursor:pointer;
-            transition:0.2s;
-        }
-
-        button:hover{
-            background:#1d4ed8;
-        }
-
-        /* =========================
-           MAIN CONTENT
-        ==========================*/
-
-        .main-content{
-            padding:30px;
-        }
-
-        .dashboard{
-            display:grid;
-            grid-template-columns:repeat(auto-fit, minmax(250px, 1fr));
-            gap:20px;
-            margin-bottom:30px;
-        }
-
-        .card{
-            background:white;
-            padding:20px;
-            border-radius:16px;
-            box-shadow:0 4px 12px rgba(0,0,0,0.06);
-        }
-
-        .card h3{
-            font-size:1rem;
-            margin-bottom:10px;
-            color:#475569;
-        }
-
-        .card p{
-            font-size:2rem;
-            font-weight:700;
-            color:#0f172a;
-        }
-
-        /* =========================
-           CHART SECTION
-        ==========================*/
-
-        .chart-container{
-            background:white;
-            padding:25px;
-            border-radius:16px;
-            box-shadow:0 4px 12px rgba(0,0,0,0.06);
-        }
-
-        .chart-container h2{
-            margin-bottom:20px;
-        }
-
-        canvas{
-            width:100% !important;
-            max-height:450px;
-        }
-
-        /* =========================
-           RESPONSIVE
-        ==========================*/
-
-        @media(max-width:900px){
-
-            .container{
-                grid-template-columns:1fr;
-            }
-
-            .sidebar{
-                border-right:none;
-                border-bottom:1px solid #d1d5db;
-            }
-
-        }
-
-    </style>
 </head>
 
 <body>
 
-    <!-- =========================
+    <!-- =====================================
          HEADER
-    ========================== -->
+    ====================================== -->
 
-    <header>
+    <header class="header">
 
         <div>
-            <h1>Simulador Fotovoltaico Industrial</h1>
-            <p>Análisis energético y eficiencia solar</p>
+
+            <h1>
+                Simulador Fotovoltaico Industrial
+            </h1>
+
+            <p>
+                Análisis energético y eficiencia solar
+            </p>
+
         </div>
 
     </header>
 
-    <!-- =========================
-         MAIN CONTAINER
-    ========================== -->
+
+
+    <!-- =====================================
+         LAYOUT PRINCIPAL
+    ====================================== -->
 
     <div class="container">
 
-        <!-- =========================
+
+
+
+        <!-- =================================
              SIDEBAR
-        ========================== -->
+        ================================== -->
 
         <aside class="sidebar">
 
-            <!-- UBICACIÓN -->
 
-            <div class="section">
+
+
+            <!-- =============================
+                 UBICACION
+            ============================== -->
+
+            <section class="section">
 
                 <h2>Ubicación</h2>
 
                 <div class="input-group">
-                    <label>Latitud</label>
-                    <input type="number" step="any" id="latitud">
+
+                    <label for="latitud">
+                        Latitud
+                    </label>
+
+                    <input type="number"
+                           step="any"
+                           id="latitud"
+                           value="25.6866">
+
                 </div>
 
                 <div class="input-group">
-                    <label>Longitud</label>
-                    <input type="number" step="any" id="longitud">
+
+                    <label for="longitud">
+                        Longitud
+                    </label>
+
+                    <input type="number"
+                           step="any"
+                           id="longitud"
+                           value="-100.3161">
+
                 </div>
 
                 <div class="input-group">
-                    <label>Altitud (m)</label>
-                    <input type="number" step="any" id="altitud">
+
+                    <label for="altitud">
+                        Altitud (m)
+                    </label>
+
+                    <input type="number"
+                           step="any"
+                           id="altitud"
+                           value="540">
+
                 </div>
 
-            </div>
+            </section>
 
-            <!-- PANEL -->
 
-            <div class="section">
 
-                <h2>Sistema Fotovoltaico</h2>
+
+            <!-- =============================
+                 SISTEMA FV
+            ============================== -->
+
+            <section class="section">
+
+                <h2>
+                    Sistema Fotovoltaico
+                </h2>
 
                 <div class="input-group">
-                    <label>Eficiencia (%)</label>
-                    <input type="number" step="0.1" id="eficiencia">
+
+                    <label for="eficiencia">
+                        Eficiencia (%)
+                    </label>
+
+                    <input type="number"
+                           step="0.1"
+                           id="eficiencia"
+                           value="22">
+
                 </div>
 
                 <div class="input-group">
-                    <label>Área total (m²)</label>
-                    <input type="number" step="0.1" id="area">
+
+                    <label for="area">
+                        Área total (m²)
+                    </label>
+
+                    <input type="number"
+                           step="0.1"
+                           id="area"
+                           value="4">
+
                 </div>
 
                 <div class="input-group">
-                    <label>Potencia nominal (kW)</label>
-                    <input type="number" step="0.1" id="potencia">
+
+                    <label for="potencia">
+                        Potencia nominal (kW)
+                    </label>
+
+                    <input type="number"
+                           step="0.1"
+                           id="potencia"
+                           value="1">
+
                 </div>
 
-            </div>
+            </section>
 
-            <!-- INSTALACIÓN -->
 
-            <div class="section">
+
+
+            <!-- =============================
+                 INSTALACION
+            ============================== -->
+
+            <section class="section">
 
                 <h2>Instalación</h2>
 
                 <div class="input-group">
-                    <label>Ángulo de inclinación (°)</label>
-                    <input type="number" step="0.1" id="inclinacion">
+
+                    <label for="inclinacion">
+                        Inclinación (°)
+                    </label>
+
+                    <input type="number"
+                           step="0.1"
+                           id="inclinacion"
+                           value="25">
+
                 </div>
 
                 <div class="input-group">
-                    <label>Orientación (Azimut °)</label>
-                    <input type="number" step="0.1" id="azimut">
+
+                    <label for="azimut">
+                        Azimut (°)
+                    </label>
+
+                    <input type="number"
+                           step="0.1"
+                           id="azimut"
+                           value="180">
+
                 </div>
 
-            </div>
+            </section>
 
-            <!-- DEMANDA -->
 
-            <div class="section">
 
-                <h2>Perfil de Demanda</h2>
+
+            <!-- =============================
+                 DEMANDA
+            ============================== -->
+
+            <section class="section">
+
+                <h2>
+                    Perfil de Demanda
+                </h2>
 
                 <div class="input-group">
-                    <label>Tipo de perfil</label>
+
+                    <label for="perfil">
+                        Tipo de perfil
+                    </label>
 
                     <select id="perfil">
-                        <option>Verano</option>
-                        <option>No Verano</option>
-                        <option>Fin de Semana</option>
+
+                        <option>
+                            Verano
+                        </option>
+
+                        <option>
+                            No Verano
+                        </option>
+
+                        <option>
+                            Fin de Semana
+                        </option>
+
                     </select>
 
                 </div>
 
                 <div class="input-group">
-                    <label>Subir archivo CSV</label>
-                    <input type="file" id="csvFile" accept=".csv">
-                </div>
 
-            </div>
+                    <label for="csvInput">
+                        Subir CSV
+                    </label>
 
-            <!-- BOTÓN -->
+                    <input type="file"
+                           id="csvInput"
+                           accept=".csv">
 
-            <button id="calcularBtn">
-                Calcular Simulación
-            </button>
-
-        </aside>
-
-        <!-- =========================
-             MAIN CONTENT
-        ========================== -->
-
-        <main class="main-content">
-
-            <!-- KPIs -->
-
-            <section class="dashboard">
-
-                <div class="card">
-                    <h3>Generación Anual</h3>
-                    <p id="genAnual">0 kWh</p>
-                </div>
-
-                <div class="card">
-                    <h3>Eficiencia</h3>
-                    <p id="efSistema">0%</p>
-                </div>
-
-                <div class="card">
-                    <h3>Cobertura</h3>
-                    <p id="cobertura">0%</p>
-                </div>
-
-                <div class="card">
-                    <h3>Potencia Pico</h3>
-                    <p id="potenciaPico">0 kW</p>
                 </div>
 
             </section>
 
-            <!-- GRÁFICA -->
+
+
+
+            <!-- =============================
+                 BOTON
+            ============================== -->
+
+            <button id="calcularBtn">
+
+                Calcular Simulación
+
+            </button>
+
+
+
+
+            <!-- =============================
+                 MENSAJES
+            ============================== -->
+
+            <div id="statusMessage">
+
+            </div>
+
+        </aside>
+
+
+
+
+        <!-- =================================
+             MAIN CONTENT
+        ================================== -->
+
+        <main class="main-content">
+
+
+
+
+            <!-- =============================
+                 KPI DASHBOARD
+            ============================== -->
+
+            <section class="dashboard">
+
+                <div class="card">
+
+                    <h3>
+                        Generación Anual
+                    </h3>
+
+                    <p id="genAnual">
+                        0 kWh
+                    </p>
+
+                </div>
+
+                <div class="card">
+
+                    <h3>
+                        Eficiencia
+                    </h3>
+
+                    <p id="efSistema">
+                        0%
+                    </p>
+
+                </div>
+
+                <div class="card">
+
+                    <h3>
+                        Cobertura
+                    </h3>
+
+                    <p id="cobertura">
+                        0%
+                    </p>
+
+                </div>
+
+                <div class="card">
+
+                    <h3>
+                        Potencia Pico
+                    </h3>
+
+                    <p id="potenciaPico">
+                        0 kW
+                    </p>
+
+                </div>
+
+            </section>
+
+
+
+
+            <!-- =============================
+                 GRAFICAS
+            ============================== -->
 
             <section class="chart-container">
 
-                <h2>Demanda vs Generación</h2>
+                <h2>
+                    Potencia Generada
+                </h2>
 
-                <canvas id="energiaChart"></canvas>
+                <canvas id="powerChart">
+
+                </canvas>
+
+            </section>
+
+
+
+
+            <section class="chart-container">
+
+                <h2>
+                    Irradiancia Solar
+                </h2>
+
+                <canvas id="irradianceChart">
+
+                </canvas>
+
+            </section>
+
+
+
+
+            <section class="chart-container">
+
+                <h2>
+                    Sistema de Baterías
+                </h2>
+
+                <canvas id="batteryChart">
+
+                </canvas>
+
+            </section>
+
+
+
+
+            <section class="chart-container">
+
+                <h2>
+                    Temperatura del Panel
+                </h2>
+
+                <canvas id="temperatureChart">
+
+                </canvas>
 
             </section>
 
@@ -366,56 +441,18 @@
 
     </div>
 
-    <!-- =========================
-         SCRIPT BASE
-    ========================== -->
 
-    <script>
 
-        const ctx = document.getElementById('energiaChart');
 
-        const energiaChart = new Chart(ctx, {
+    <!-- =====================================
+         MAIN JS
+    ====================================== -->
 
-            type: 'line',
-
-            data: {
-
-                labels: ['00:00', '06:00', '12:00', '18:00', '24:00'],
-
-                datasets: [
-
-                    {
-                        label: 'Demanda',
-                        data: [120, 180, 300, 220, 140]
-                    },
-
-                    {
-                        label: 'Generación Solar',
-                        data: [0, 40, 280, 60, 0]
-                    }
-
-                ]
-
-            },
-
-            options: {
-
-                responsive:true,
-
-                maintainAspectRatio:false
-
-            }
-
-        });
-
-        document.getElementById('calcularBtn')
-        .addEventListener('click', () => {
-
-            alert('Aquí irá la simulación solar.');
-
-        });
+    <script type="module"
+            src="./js/main.js">
 
     </script>
 
 </body>
+
 </html>
