@@ -277,6 +277,11 @@ export function solarElevation(
 
 // ============================================
 // AZIMUTH SOLAR
+// Convención:
+// 0° = Norte
+// 90° = Este
+// 180° = Sur
+// 270° = Oeste
 // ============================================
 
 export function solarAzimuth(
@@ -291,7 +296,10 @@ export function solarAzimuth(
 
 ) {
 
-    // Evitar singularidad
+    // ========================================
+    // SOL CENITAL
+    // ========================================
+
     if (zenith <= 0.0001) {
 
         return 180;
@@ -311,58 +319,69 @@ export function solarAzimuth(
         deg2rad(zenith);
 
 
-    const denominator =
-
-        Math.cos(latRad) *
+    const sinZenith =
         Math.sin(zenithRad);
 
 
-    // Evitar división peligrosa
-    if (Math.abs(denominator) < 1e-10) {
+    // ========================================
+    // EVITAR DIVISIONES PELIGROSAS
+    // ========================================
+
+    if (Math.abs(sinZenith) < 1e-10) {
 
         return 180;
     }
 
 
-    const sinAzimuth =
+    let cosAzimuth =
 
         (
-            Math.cos(decRad) *
-            Math.sin(hraRad)
-        )
 
-        /
-
-        Math.sin(zenithRad);
-
-
-    const cosAzimuth =
-
-        (
             Math.sin(decRad)
 
             -
 
             Math.sin(latRad) *
             Math.cos(zenithRad)
+
         )
 
         /
 
-        denominator;
+        (
+
+            Math.cos(latRad) *
+            sinZenith
+        );
+
+
+    // ========================================
+    // ESTABILIDAD NUMERICA
+    // ========================================
+
+    cosAzimuth =
+        clamp(
+            cosAzimuth,
+            -1,
+            1
+        );
 
 
     let azimuth = rad2deg(
 
-        Math.atan2(
-            sinAzimuth,
-            cosAzimuth
-        )
+        Math.acos(cosAzimuth)
     );
 
 
-    azimuth =
-        (azimuth + 360) % 360;
+    // ========================================
+    // AJUSTE MAÑANA/TARDE
+    // ========================================
+
+    if (hourAngleDeg > 0) {
+
+        azimuth =
+            360 - azimuth;
+    }
 
 
     return azimuth;

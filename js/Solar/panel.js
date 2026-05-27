@@ -96,6 +96,10 @@ export function beamComponent(
 
 ) {
 
+    dni =
+        Number(dni) || 0;
+
+
     const incidenceRad =
         deg2rad(
             incidenceAngleDeg
@@ -126,6 +130,10 @@ export function diffuseComponent(
     panelTilt
 
 ) {
+
+    dhi =
+        Number(dhi) || 0;
+
 
     const tiltRad =
         deg2rad(panelTilt);
@@ -158,6 +166,13 @@ export function groundReflectedComponent(
     albedo = 0.2
 
 ) {
+
+    ghi =
+        Number(ghi) || 0;
+
+    albedo =
+        clamp(albedo, 0, 1);
+
 
     const tiltRad =
         deg2rad(panelTilt);
@@ -259,6 +274,13 @@ export function panelTemperature(
 
 ) {
 
+    ambientTemp =
+        Number(ambientTemp) || 25;
+
+    poaIrradiance =
+        Number(poaIrradiance) || 0;
+
+
     return (
 
         ambientTemp +
@@ -288,6 +310,13 @@ export function thermalEfficiency(
 
 ) {
 
+    nominalEfficiency =
+        Number(nominalEfficiency) || 0;
+
+    panelTemp =
+        Number(panelTemp) || 25;
+
+
     const efficiency =
 
         nominalEfficiency *
@@ -301,9 +330,14 @@ export function thermalEfficiency(
         );
 
 
-    return Math.max(
+    // ========================================
+    // LIMITES FISICOS
+    // ========================================
+
+    return clamp(
+        efficiency,
         0,
-        efficiency
+        nominalEfficiency * 1.05
     );
 }
 
@@ -323,6 +357,16 @@ export function generatedPower(
     efficiency
 
 ) {
+
+    poaIrradiance =
+        Number(poaIrradiance) || 0;
+
+    panelArea =
+        Number(panelArea) || 0;
+
+    efficiency =
+        Number(efficiency) || 0;
+
 
     return Math.max(
 

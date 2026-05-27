@@ -54,6 +54,10 @@ export function extraterrestrialIrradiance(
 
 ) {
 
+    dayOfYear =
+        Number(dayOfYear) || 1;
+
+
     return (
 
         SOLAR_CONSTANT *
@@ -87,8 +91,23 @@ export function airMass(
 
 ) {
 
-    // Sol bajo horizonte
-    if (zenith >= 90) {
+    zenith =
+        Number(zenith);
+
+
+    // ========================================
+    // SOL BAJO HORIZONTE
+    // ========================================
+
+    if (
+
+        !isFinite(zenith) ||
+
+        zenith >= 90 ||
+
+        zenith < 0
+
+    ) {
 
         return null;
     }
@@ -117,7 +136,13 @@ export function airMass(
         );
 
 
-    if (denominator <= 0) {
+    if (
+
+        !isFinite(denominator) ||
+
+        denominator <= 0
+
+    ) {
 
         return null;
     }
@@ -145,6 +170,8 @@ export function atmosphericTransmittance(
 
         airMassValue === null ||
 
+        !isFinite(airMassValue) ||
+
         airMassValue <= 0
 
     ) {
@@ -153,7 +180,14 @@ export function atmosphericTransmittance(
     }
 
 
-    // Corrección básica por altitud
+    altitude =
+        Number(altitude) || 0;
+
+
+    // ========================================
+    // CORRECCION SIMPLE POR ALTITUD
+    // ========================================
+
     const altitudeFactor =
 
         Math.exp(
@@ -161,7 +195,7 @@ export function atmosphericTransmittance(
         );
 
 
-    const transmittance =
+    let transmittance =
 
         Math.pow(
 
@@ -178,11 +212,15 @@ export function atmosphericTransmittance(
         altitudeFactor;
 
 
-    return clamp(
-        transmittance,
-        0,
-        1
-    );
+    transmittance =
+        clamp(
+            transmittance,
+            0,
+            1
+        );
+
+
+    return transmittance;
 }
 
 
@@ -199,6 +237,13 @@ export function directNormalIrradiance(
     transmittance
 
 ) {
+
+    extraterrestrial =
+        Number(extraterrestrial) || 0;
+
+    transmittance =
+        Number(transmittance) || 0;
+
 
     return Math.max(
 
@@ -223,6 +268,13 @@ export function globalHorizontalIrradiance(
     zenith
 
 ) {
+
+    dni =
+        Number(dni) || 0;
+
+    zenith =
+        Number(zenith) || 0;
+
 
     const cosZenith =
 
@@ -249,14 +301,58 @@ export function globalHorizontalIrradiance(
 
 export function diffuseHorizontalIrradiance(
 
-    ghi
+    ghi,
+
+    dni = 0,
+
+    zenith = 0
 
 ) {
 
-    // Aproximación:
-    // ~10-30% de GHI suele ser difusa
+    ghi =
+        Number(ghi) || 0;
 
-    return ghi * 0.15;
+    dni =
+        Number(dni) || 0;
+
+    zenith =
+        Number(zenith) || 0;
+
+
+    // ========================================
+    // MODELO EMPIRICO SIMPLE
+    // ========================================
+
+    const cosZenith =
+
+        Math.max(
+            0,
+            Math.cos(
+                deg2rad(zenith)
+            )
+        );
+
+
+    const beamHorizontal =
+        dni * cosZenith;
+
+
+    let dhi =
+        ghi - beamHorizontal;
+
+
+    // ========================================
+    // FALLBACK SI DA NEGATIVO
+    // ========================================
+
+    if (dhi < 0) {
+
+        dhi =
+            ghi * 0.15;
+    }
+
+
+    return Math.max(0, dhi);
 }
 
 
@@ -273,6 +369,13 @@ export function beamHorizontalIrradiance(
     zenith
 
 ) {
+
+    dni =
+        Number(dni) || 0;
+
+    zenith =
+        Number(zenith) || 0;
+
 
     return Math.max(
 

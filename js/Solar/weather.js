@@ -185,23 +185,33 @@ export function normalizeWeatherData(
 
         temperature:
 
-            weatherData.temperature ?? 25,
+            Number(
+                weatherData.temperature
+            ) || 25,
 
         humidity:
 
-            weatherData.humidity ?? 50,
+            Number(
+                weatherData.humidity
+            ) || 50,
 
         cloudCover:
 
-            weatherData.cloudCover ?? 0,
+            Number(
+                weatherData.cloudCover
+            ) || 0,
 
         windSpeed:
 
-            weatherData.windSpeed ?? 0,
+            Number(
+                weatherData.windSpeed
+            ) || 0,
 
         rainMM:
 
-            weatherData.rainMM ?? 0
+            Number(
+                weatherData.rainMM
+            ) || 0
     };
 }
 
@@ -222,9 +232,13 @@ export async function fetchHourlyWeather(
 
     try {
 
+        // ====================================
+        // OPEN METEO
+        // ====================================
+
         const url =
 
-            `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m,relative_humidity_2m,cloud_cover,wind_speed_10m,precipitation&forecast_days=1`;
+            `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m,relative_humidity_2m,cloud_cover,wind_speed_10m,precipitation&forecast_days=7`;
 
 
         const response =
@@ -243,38 +257,76 @@ export async function fetchHourlyWeather(
             await response.json();
 
 
-        return data.hourly.time.map(
+        // ====================================
+        // VALIDAR RESPUESTA
+        // ====================================
 
-            (time, index) => ({
+        if (
 
-                time,
+            !data ||
 
-                temperature:
+            !data.hourly ||
 
-                    data.hourly
-                    .temperature_2m[index],
+            !data.hourly.time
 
-                humidity:
+        ) {
 
-                    data.hourly
-                    .relative_humidity_2m[index],
+            throw new Error(
+                'Datos meteorológicos inválidos'
+            );
+        }
 
-                cloudCover:
 
-                    data.hourly
-                    .cloud_cover[index],
+        // ====================================
+        // MAPEO
+        // ====================================
 
-                windSpeed:
+        const weather =
 
-                    data.hourly
-                    .wind_speed_10m[index],
+            data.hourly.time.map(
 
-                rainMM:
+                (time, index) =>
 
-                    data.hourly
-                    .precipitation[index]
-            })
+                    normalizeWeatherData({
+
+                        time,
+
+                        temperature:
+
+                            data.hourly
+                                .temperature_2m?.[index],
+
+                        humidity:
+
+                            data.hourly
+                                .relative_humidity_2m?.[index],
+
+                        cloudCover:
+
+                            data.hourly
+                                .cloud_cover?.[index],
+
+                        windSpeed:
+
+                            data.hourly
+                                .wind_speed_10m?.[index],
+
+                        rainMM:
+
+                            data.hourly
+                                .precipitation?.[index]
+                    })
+            );
+
+
+        console.log(
+            'Weather loaded:',
+            weather.length,
+            'hours'
         );
+
+
+        return weather;
 
     } catch (error) {
 
@@ -294,20 +346,22 @@ export async function fetchHourlyWeather(
 
             { length: 24 },
 
-            (_, hour) => ({
+            (_, hour) =>
 
-                hour,
+                normalizeWeatherData({
 
-                temperature: 25,
+                    hour,
 
-                humidity: 50,
+                    temperature: 25,
 
-                cloudCover: 0,
+                    humidity: 50,
 
-                windSpeed: 0,
+                    cloudCover: 10,
 
-                rainMM: 0
-            })
+                    windSpeed: 2,
+
+                    rainMM: 0
+                })
         );
     }
 }

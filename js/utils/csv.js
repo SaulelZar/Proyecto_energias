@@ -186,8 +186,18 @@ export function parseCSV(
                 }
 
 
+                // ====================================
+                // SOPORTE PARA COMAS DECIMALES
+                // ====================================
+
+                const normalized =
+
+                    String(rawValue)
+                        .replace(',', '.');
+
+
                 const numeric =
-                    Number(rawValue);
+                    Number(normalized);
 
 
                 row[header] =
@@ -288,7 +298,7 @@ export function splitCSVLine(
 
 
 // ============================================
-// PERFIL DE CONSUMO
+// PERFIL DE CONSUMO SIMPLE
 // ============================================
 
 export function consumptionProfile(
@@ -339,4 +349,35 @@ export function consumptionProfile(
                 : value;
         }
     );
+}
+
+
+// ============================================
+// PERFIL DE CONSUMO 15-MINUTAL (Reemplazar solo esta función en csv.js)
+// ============================================
+
+export function intervalConsumptionProfile(
+    csvData,
+    column = 'Demanda_kW'
+) {
+    if (!csvData.length) return [];
+
+    if (!(column in csvData[0])) {
+        throw new Error(`Columna "${column}" no encontrada`);
+    }
+
+    const profile = csvData.map(row => {
+        const value = Number(row[column]);
+        if (isNaN(value)) return 0;
+        
+        // 🟢 FIX: Mantenemos la pureza del dato en kW.
+        // La conversión a kWh se hará directamente en el nodo de balance (energySystem.js).
+        return value; 
+    });
+
+    if (profile.length !== 35040) {
+        console.warn(`Perfil anual esperado: 35040 intervalos. Recibidos: ${profile.length}`);
+    }
+
+    return profile;
 }

@@ -86,13 +86,14 @@ export function netACPower(
 
 ) {
 
-    return Math.max(
+    const power =
 
-        0,
+        (Number(dcPower) || 0) *
 
-        dcPower *
-        lossesFactor
-    );
+        (Number(lossesFactor) || 0);
+
+
+    return Math.max(0, power);
 }
 
 
@@ -110,13 +111,14 @@ export function netACEnergy(
 
 ) {
 
-    return Math.max(
+    const energy =
 
-        0,
+        (Number(dcEnergy) || 0) *
 
-        dcEnergy *
-        lossesFactor
-    );
+        (Number(lossesFactor) || 0);
+
+
+    return Math.max(0, energy);
 }
 
 
@@ -135,6 +137,16 @@ export function capacityFactor(
     hours = 24
 
 ) {
+
+    actualEnergy =
+        Number(actualEnergy) || 0;
+
+    ratedPower =
+        Number(ratedPower) || 0;
+
+    hours =
+        Number(hours) || 0;
+
 
     if (
 
@@ -173,6 +185,13 @@ export function performanceRatio(
 
 ) {
 
+    actualEnergy =
+        Number(actualEnergy) || 0;
+
+    referenceEnergy =
+        Number(referenceEnergy) || 0;
+
+
     if (referenceEnergy <= 0) {
 
         return 0;
@@ -198,6 +217,13 @@ export function specificYield(
     installedPowerKWp
 
 ) {
+
+    energyKWh =
+        Number(energyKWh) || 0;
+
+    installedPowerKWp =
+        Number(installedPowerKWp) || 0;
+
 
     if (installedPowerKWp <= 0) {
 
@@ -226,6 +252,13 @@ export function systemEfficiency(
 
 ) {
 
+    outputEnergy =
+        Number(outputEnergy) || 0;
+
+    inputSolarEnergy =
+        Number(inputSolarEnergy) || 0;
+
+
     if (inputSolarEnergy <= 0) {
 
         return 0;
@@ -253,6 +286,13 @@ export function selfConsumptionRatio(
 
 ) {
 
+    selfConsumedEnergy =
+        Number(selfConsumedEnergy) || 0;
+
+    totalSolarEnergy =
+        Number(totalSolarEnergy) || 0;
+
+
     if (totalSolarEnergy <= 0) {
 
         return 0;
@@ -279,6 +319,13 @@ export function selfSufficiencyRatio(
     totalConsumption
 
 ) {
+
+    selfConsumedEnergy =
+        Number(selfConsumedEnergy) || 0;
+
+    totalConsumption =
+        Number(totalConsumption) || 0;
+
 
     if (totalConsumption <= 0) {
 
