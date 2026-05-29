@@ -222,146 +222,65 @@ export function normalizeWeatherData(
 // CLIMA HORARIO
 // ============================================
 
-export async function fetchHourlyWeather(
+// ============================================
+// AÑO METEOROLÓGICO TÍPICO Y ESCENARIOS
+// (Reemplazar en weather.js)
+// ============================================
 
-    latitude,
+export async function fetchHourlyWeather(latitude, longitude, profile = 'normal') {
+    console.log(`Generando clima sintético. Perfil activado: ${profile}`);
 
-    longitude
+    const weather = [];
+    const isNorthern = latitude >= 0;
+    const daysInYear = 365;
 
-) {
+    for (let day = 0; day < daysInYear; day++) {
+        const seasonPhase = Math.cos(((day - 172) / daysInYear) * Math.PI * 2);
+        const hemisphereFactor = isNorthern ? 1 : -1;
 
-    try {
+        let baseTemp = 24 + (10 * seasonPhase * hemisphereFactor);
+        let cloudBase = 10;
+        let rainBase = 0;
 
-        // ====================================
-        // OPEN METEO
-        // ====================================
-
-        const url =
-
-            `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m,relative_humidity_2m,cloud_cover,wind_speed_10m,precipitation&forecast_days=7`;
-
-
-        const response =
-            await fetch(url);
-
-
-        if (!response.ok) {
-
-            throw new Error(
-                'Weather API error'
-            );
+        // Comportamiento base orgánico
+        if (seasonPhase * hemisphereFactor > 0.3) {
+            cloudBase = 45;
+        } else if (seasonPhase * hemisphereFactor < -0.3) {
+            cloudBase = 5;
         }
 
-
-        const data =
-            await response.json();
-
-
-        // ====================================
-        // VALIDAR RESPUESTA
-        // ====================================
-
-        if (
-
-            !data ||
-
-            !data.hourly ||
-
-            !data.hourly.time
-
-        ) {
-
-            throw new Error(
-                'Datos meteorológicos inválidos'
-            );
+        // 🟢 INYECCIÓN DE CASOS FRONTERA
+        if (profile === 'despejado') {
+            cloudBase = 0;
+            rainBase = 0;
+        } else if (profile === 'nublado') {
+            cloudBase = 90; // Satura el cielo, destruye la irradiancia directa (DNI)
+            rainBase = 2;   // Factor de atenuación por lluvia
+        } else if (profile === 'ola_calor') {
+            baseTemp += 15; // Desplaza la matriz térmica 15°C hacia arriba
+            cloudBase = 0;  // Cielo despejado para maximizar la absorción de calor
         }
 
+        for (let hour = 0; hour < 24; hour++) {
+            const dailyPhase = Math.cos(((hour - 15) / 24) * Math.PI * 2);
+            let currentTemp = baseTemp + (7 * dailyPhase);
 
-        // ====================================
-        // MAPEO
-        // ====================================
+            // Ruido ambiental (si es despejado, forzamos cero ruido)
+            let cloudNoise = profile === 'despejado' ? 0 : (Math.random() * 15) - 7.5;
+            let currentClouds = Math.max(0, Math.min(100, cloudBase + cloudNoise));
 
-        const weather =
+            // Viento de enfriamiento: En ola de calor el aire se estanca
+            let currentWind = profile === 'ola_calor' ? 0.5 : 2 + (Math.random() * 3);
 
-            data.hourly.time.map(
-
-                (time, index) =>
-
-                    normalizeWeatherData({
-
-                        time,
-
-                        temperature:
-
-                            data.hourly
-                                .temperature_2m?.[index],
-
-                        humidity:
-
-                            data.hourly
-                                .relative_humidity_2m?.[index],
-
-                        cloudCover:
-
-                            data.hourly
-                                .cloud_cover?.[index],
-
-                        windSpeed:
-
-                            data.hourly
-                                .wind_speed_10m?.[index],
-
-                        rainMM:
-
-                            data.hourly
-                                .precipitation?.[index]
-                    })
-            );
-
-
-        console.log(
-            'Weather loaded:',
-            weather.length,
-            'hours'
-        );
-
-
-        return weather;
-
-    } catch (error) {
-
-        console.error(
-
-            'Weather fetch failed:',
-
-            error
-        );
-
-
-        // ====================================
-        // FALLBACK
-        // ====================================
-
-        return Array.from(
-
-            { length: 24 },
-
-            (_, hour) =>
-
-                normalizeWeatherData({
-
-                    hour,
-
-                    temperature: 25,
-
-                    humidity: 50,
-
-                    cloudCover: 10,
-
-                    windSpeed: 2,
-
-                    rainMM: 0
-                })
-        );
+            weather.push({
+                temperature: Math.max(0, Math.min(60, currentTemp)),
+                humidity: profile === 'nublado' ? 95 : 50 + (currentClouds * 0.3),
+                cloudCover: currentClouds,
+                windSpeed: currentWind,
+                rainMM: profile === 'nublado' ? rainBase + Math.random() : 0
+            });
+        }
     }
+
+    return weather;
 }

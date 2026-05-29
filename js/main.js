@@ -22,28 +22,16 @@ import {
 
 
 // ============================================
-// VARIABLES GLOBALES (Con memoria)
+// VARIABLES GLOBALES (Agregar a main.js)
 // ============================================
-
 let yearlySimulation = null;
 let energyResults = null;
 let hourlyWeather = [];
-let currentCsvData = []; // Memoria para que el botón Calcular no borre tu fábrica
+let currentCsvData = []; 
+let currentWeatherProfile = ''; // 🟢 Memoria del escenario meteorológico
+
 
 const DEFAULT_HOURLY_CONSUMPTION = Array(96).fill(0);
-
-
-// ============================================
-// BATERÍA
-// ============================================
-
-function buildBattery() {
-    return createBattery({
-        capacityKWh: 10,
-        initialSOC: 0.5
-    });
-}
-
 
 // ============================================
 // INPUT SAFE
@@ -59,9 +47,8 @@ function getInputValue(id, fallback = 0) {
 
 
 // ============================================
-// CONFIG UI
+// CONFIG UI (Actualizar en main.js)
 // ============================================
-
 function getConfigFromUI() {
     const longitude = getInputValue('longitud', -100.3161);
     const standardMeridian = Math.round(longitude / 15) * 15;
@@ -75,6 +62,12 @@ function getConfigFromUI() {
         panelAzimuth: getInputValue('azimut', 180),
         panelArea: getInputValue('area', 4),
         nominalEfficiency: getInputValue('eficiencia', 22) / 100,
+        
+        // 🟢 NUEVOS PARÁMETROS INDUSTRIALES
+        tracking: document.getElementById('tracking')?.value || 'fixed',
+        bifaciality: getInputValue('bifacial', 0),
+        inverterAC: getInputValue('inversorAC', 10000), 
+
         year: 2026
     };
 }
@@ -104,82 +97,126 @@ function updateKPIs() {
     }
 }
 
-
 // ============================================
-// CHARTS
+// BUSCADOR DE ESCENARIOS (Con Día Específico)
 // ============================================
+function getSelectedDay(dailyResults) {
+    // 1. Revisamos si el usuario seleccionó un día exacto en el calendario
+    const fechaInput = document.getElementById('diaEspecifico')?.value;
 
-function updateCharts() {
-    if (!yearlySimulation) return;
+    if (fechaInput) {
+        // Extraemos año, mes y día (evitamos problemas de huso horario separando el string)
+        const [year, month, day] = fechaInput.split('-');
+        
+        // El mes en JavaScript empieza en 0 (Enero = 0, Diciembre = 11)
+        const targetMonth = Number(month) - 1; 
+        const targetDay = Number(day);
 
-    const firstDay = yearlySimulation.dailyResults[0];
+        // Buscamos el día exacto en la matriz de los 365 días
+        const diaExacto = dailyResults.find(d => 
+            d.date.getMonth() === targetMonth && 
+            d.date.getDate() === targetDay
+        );
 
-    if (!firstDay?.fullSimulation) return;
-
-    // Pasamos el balance completo (incluye el CSV) a las gráficas principales
-    if (energyResults?.intervals) {
-        createPowerChart('powerChart', energyResults.intervals);
-        createBatteryChart('batteryChart', energyResults.intervals);
+        if (diaExacto) {
+            console.log(`Graficando día específico: ${fechaInput}`);
+            return diaExacto;
+        }
     }
 
-    createIrradianceChart('irradianceChart', firstDay.fullSimulation);
-    createTemperatureChart('temperatureChart', firstDay.fullSimulation);
+    // ========================================
+    // 2. Si no hay día específico, usamos el sistema estacional (Régimen Nominal)
+    // ========================================
+    const estacion = document.getElementById('estacion')?.value || 'verano';
+    const tipoDia = document.getElementById('tipoDia')?.value || 'semana';
+
+    let targetMonth = 2; // Primavera
+    if (estacion === 'verano') targetMonth = 5; // Junio
+    if (estacion === 'otono') targetMonth = 8; // Septiembre
+    if (estacion === 'invierno') targetMonth = 11; // Diciembre
+
+    const quiereFinDeSemana = (tipoDia === 'fin_semana');
+
+    const diaEncontrado = dailyResults.find(d => {
+        const diaSemana = d.date.getDay();
+        
+        if (quiereFinDeSemana) {
+            // Buscamos el primer Domingo del mes
+            return d.date.getMonth() === targetMonth && diaSemana === 0;
+        } else {
+            // Buscamos el primer Miércoles del mes (libre de inercia de fin de semana)
+            return d.date.getMonth() === targetMonth && diaSemana === 3;
+        }
+    });
+
+    return diaEncontrado || dailyResults[0]; 
 }
 
 
 // ============================================
-// SIMULACIÓN PRINCIPAL
+// CHARTS (Actualizado)
 // ============================================
+function updateCharts(selectedDay) {
+    if (!selectedDay) return;
 
+    // 🟢 Ahora graficamos el día exacto que el usuario seleccionó
+    if (selectedDay.energySystem?.intervals) {
+        createPowerChart('powerChart', selectedDay.energySystem.intervals);
+        createBatteryChart('batteryChart', selectedDay.energySystem.intervals);
+    }
+
+    if (selectedDay.fullSimulation) {
+        createIrradianceChart('irradianceChart', selectedDay.fullSimulation);
+        createTemperatureChart('temperatureChart', selectedDay.fullSimulation);
+
+    }
+}
+
+
+// ============================================
+// SIMULACIÓN PRINCIPAL (Actualizar bloque inicial)
+// ============================================
 async function runSimulation() {
     try {
         const config = getConfigFromUI();
-        console.log('CONFIG:', config);
-        console.log('RAW CONSUMPTION ROWS:', currentCsvData.length);
+        
+        // 🟢 Leemos el selector de clima
+        const perfilClima = document.getElementById('climaEspecifico')?.value || 'normal';
 
-        // Solo descargamos el clima si no lo tenemos en memoria
-        if (hourlyWeather.length === 0) {
-            hourlyWeather = await fetchHourlyWeather(
-                config.latitude,
-                config.longitude
-            );
-            console.log('WEATHER LOADED');
+        // 🟢 Si no hay clima cargado, O si el usuario cambió el perfil, regeneramos la matriz
+        if (hourlyWeather.length === 0 || currentWeatherProfile !== perfilClima) {
+            hourlyWeather = await fetchHourlyWeather(config.latitude, config.longitude, perfilClima);
+            currentWeatherProfile = perfilClima;
+            console.log('CLIMA APLICADO:', perfilClima);
         }
 
+        // 🟢 FIX: Leemos físicamente la capacidad de la interfaz
+        const capacidadInput = getInputValue('capacidadBateria', 50);
+        const socInicialInput = getInputValue('socInicial', 50);
+        
+        // Evitamos que el sistema colapse si pones 0 (simulando que no hay batería)
+        const capacidadReal = capacidadInput > 0 ? capacidadInput : 0.001;
+
+        // 🟢 FIX: Inyectamos el "batteryConfig" directamente al motor de simulación anual
         yearlySimulation = simulateYear({
             ...config,
             hourlyWeather,
-            annualConsumption: currentCsvData
-        });
-
-        console.log('ANNUAL ENERGY:', yearlySimulation.annualEnergy);
-
-        const firstDay = yearlySimulation.dailyResults[0].fullSimulation;
-        const battery = buildBattery();
-
-        let firstDayConsumption = DEFAULT_HOURLY_CONSUMPTION;
-        
-        // Extraemos solo las primeras 24 horas (96 intervalos) para la gráfica principal
-        if (currentCsvData.length > 0) {
-            const targetColumn = 'kw' in currentCsvData[0] ? 'kw' : 'Demanda_kW';
-            const fullProfile = intervalConsumptionProfile(currentCsvData, targetColumn);
-            firstDayConsumption = fullProfile.slice(0, 96);
-        }
-
-        energyResults = simulateEnergySystem({
-            solarSimulation: firstDay,
-            battery,
-            hourlyConsumption: firstDayConsumption
+            annualConsumption: currentCsvData,
+            batteryConfig: {
+                capacityKWh: capacidadReal,
+                initialSOC: socInicialInput / 100
+            }
         });
 
         updateKPIs();
-        updateCharts();
+
+        const escenarioSeleccionado = getSelectedDay(yearlySimulation.dailyResults);
+        updateCharts(escenarioSeleccionado);
 
     } catch (err) {
         console.error('Simulation error:', err);
     }
 }
-
 
 // ============================================
 // CSV IMPORT

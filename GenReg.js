@@ -1,18 +1,7 @@
 const fs = require('fs');
 
-// ============================================
-// GENERAR PERFIL DE DEMANDA (CORREGIDO)
-// ============================================
-
 function generarPerfilDemanda(config) {
-
-    const {
-        demandaMaxima,
-        factorPlanta,
-        factorPotencia,
-        año
-    } = config;
-
+    const { demandaMaxima, factorPlanta, factorPotencia, año } = config;
     const registros = [];
 
     const inicio = new Date(Date.UTC(año, 0, 1, 0, 0, 0));
@@ -21,64 +10,53 @@ function generarPerfilDemanda(config) {
     let actual = new Date(inicio);
 
     while (actual <= fin) {
-
         const mes = actual.getUTCMonth() + 1;
         const hora = actual.getUTCHours();
         const dia = actual.getUTCDay();
         const minuto = actual.getUTCMinutes();
 
-        const esVerano = [6, 7, 8, 9].includes(mes);
-        const esFinSemana = (dia === 0 || dia === 6);
+        const esVerano = [6, 7, 8, 9].includes(mes); // Junio a Septiembre
+        const esFinSemana = (dia === 0 || dia === 6); // Domingo(0) o Sábado(6)
 
         // ====================================
-        // PERFIL HORARIO
+        // CURVA BASE (Turnos)
         // ====================================
-
-        let factorHorario = 0.5;
+        let factorHorario = 0.4; // Consumo base nocturno
 
         if (hora >= 8 && hora < 18) {
-            factorHorario = 1.0;
+            factorHorario = 1.0; // Turno principal (100%)
         } else if (hora >= 18 && hora < 22) {
-            factorHorario = 0.8;
-        } else if (hora >= 6 && hora < 8) {
-            factorHorario = 0.7;
+            factorHorario = 0.7; // Turno tarde (70%)
         }
 
         // ====================================
-        // FACTORES
+        // 🟢 DIFERENCIADORES SOLICITADOS
         // ====================================
+        
+        // 1. Efecto de Fin de Semana (Planta en mantenimiento/guardia)
+        if (esFinSemana) {
+            factorHorario *= 0.3; // Cae al 30% de la capacidad
+        }
 
-        const factorEstacional = esVerano ? 1.15 : 1.0;
-        const factorSemana = esFinSemana ? 0.7 : 1.0;
+        // 2. Efecto Estacional (Aires acondicionados / Chiller en Verano)
+        if (esVerano) {
+            factorHorario *= 1.2; // Aumenta 20%
+        } else if ([12, 1, 2].includes(mes)) {
+            factorHorario *= 0.9; // Invierno (menor carga térmica)
+        }
 
-        let kw =
-            demandaMaxima *
-            factorPlanta *
-            factorHorario *
-            factorEstacional *
-            factorSemana;
-
-        kw *= (0.95 + Math.random() * 0.1);
-        kw = Math.min(kw, demandaMaxima);
-
-        const kva = kw / factorPotencia;
-
-        // ====================================
-        // REGISTRO LIMPIO (IMPORTANTE)
-        // ====================================
+        const kw = demandaMaxima * factorPlanta * factorHorario;
+        // Simulamos fluctuaciones aleatorias menores (ruido industrial del 5%)
+        const kwConRuido = kw * (1 + (Math.random() * 0.05 - 0.025)); 
+        
+        const kva = kwConRuido / factorPotencia;
 
         registros.push({
             timestamp: actual.toISOString(),
-
-            year: año,
-            month: mes,
-            day: actual.getUTCDate(),
-            hour: hora,
-            minutes: minuto,
-
-            kw: Number(kw.toFixed(3)),
+            year: año, month: mes, day: actual.getUTCDate(),
+            hour: hora, minutes: minuto,
+            kw: Number(kwConRuido.toFixed(3)),
             kva: Number(kva.toFixed(3)),
-
             fp: factorPotencia
         });
 

@@ -139,7 +139,18 @@
             </section>
 
 
-
+            <section class="section">
+                <h2>Condición Meteorológica</h2>
+                <div class="input-group">
+                    <label for="climaEspecifico">Perfil de Simulación:</label>
+                    <select id="climaEspecifico">
+                        <option value="normal" selected>TMY (Año Típico)</option>
+                        <option value="despejado">Cielo Despejado (Límite Máximo)</option>
+                        <option value="nublado">Tormenta Constante (Escenario P90)</option>
+                        <option value="ola_calor">Ola de Calor (Estrés Térmico)</option>
+                    </select>
+                </div>
+            </section>
 
 
             <!-- =============================
@@ -176,6 +187,25 @@
                            id="area"
                            value="4">
 
+                </div>
+
+                <div class="input-group">
+                    <label for="tracking">Seguimiento Solar</label>
+                    <select id="tracking">
+                        <option value="fixed" selected>Montaje Fijo</option>
+                        <option value="single">1 Eje (Este-Oeste)</option>
+                        <option value="dual">2 Ejes (Zenit/Azimut)</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label for="bifacial">Bifacialidad (%)</label>
+                    <input type="number" step="1" id="bifacial" value="0" min="0" max="100">
+                </div>
+                
+                <div class="input-group">
+                    <label for="inversorAC">Límite Inversor AC (kW)</label>
+                    <input type="number" step="10" id="inversorAC" value="10000"> 
                 </div>
 
             </section>
@@ -223,7 +253,17 @@
             </section>
 
 
-
+            <section class="section">
+                <h2>Sistema de Almacenamiento</h2>
+                <div class="input-group">
+                    <label for="capacidadBateria">Capacidad (kWh)</label>
+                    <input type="number" step="1" id="capacidadBateria" value="50">
+                </div>
+                <div class="input-group">
+                    <label for="socInicial">Carga Inicial (%)</label>
+                    <input type="number" step="1" id="socInicial" value="50" min="0" max="100">
+                </div>
+            </section>
 
 
             <!-- =============================
@@ -238,25 +278,27 @@
 
                 <div class="input-group">
 
-                    <label for="perfil">
-                        Tipo de perfil
-                    </label>
+                    <div class="control-group">
+                        <label for="estacion">Estación a Graficar:</label>
+                        <select id="estacion">
+                            <option value="primavera">Primavera</option>
+                            <option value="verano" selected>Verano</option>
+                            <option value="otono">Otoño</option>
+                            <option value="invierno">Invierno</option>
+                        </select>
+                    </div>
 
-                    <select id="perfil">
-
-                        <option value="verano">
-                            Verano
-                        </option>
-
-                        <option value="no-verano">
-                            No Verano
-                        </option>
-
-                        <option value="fin-semana">
-                            Fin de Semana
-                        </option>
-
-                    </select>
+                    <div class="control-group">
+                        <label for="tipoDia">Tipo de Día:</label>
+                        <select id="tipoDia">
+                            <option value="semana" selected>Entre Semana</option>
+                            <option value="fin_semana">Fin de Semana</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label for="diaEspecifico">Día Específico (Opcional):</label>
+                        <input type="date" id="diaEspecifico" min="2026-01-01" max="2026-12-31">
+                    </div>
 
                 </div>
 
