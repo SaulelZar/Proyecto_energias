@@ -12,7 +12,8 @@ import {
     createPowerChart,
     createIrradianceChart,
     createBatteryChart,
-    createTemperatureChart
+    createTemperatureChart,
+    createNetLoadChart
 } from './ui/charts.js';
 
 import {
@@ -159,16 +160,17 @@ function getSelectedDay(dailyResults) {
 function updateCharts(selectedDay) {
     if (!selectedDay) return;
 
-    // 🟢 Ahora graficamos el día exacto que el usuario seleccionó
     if (selectedDay.energySystem?.intervals) {
         createPowerChart('powerChart', selectedDay.energySystem.intervals);
         createBatteryChart('batteryChart', selectedDay.energySystem.intervals);
+        
+        // 🟢 NUEVA GRÁFICA: Le pasamos los datos del balance
+        createNetLoadChart('netLoadChart', selectedDay.energySystem.intervals);
     }
 
     if (selectedDay.fullSimulation) {
         createIrradianceChart('irradianceChart', selectedDay.fullSimulation);
         createTemperatureChart('temperatureChart', selectedDay.fullSimulation);
-
     }
 }
 
@@ -246,16 +248,31 @@ function setupCSVImport() {
 
 
 // ============================================
-// BOTÓN CALCULAR
+// CONTROLES Y EVENTOS (Actualizado)
 // ============================================
 
 function setupCalculateButton() {
     const btn = document.getElementById('calcularBtn');
-    if (!btn) return;
+    if (btn) {
+        btn.addEventListener('click', async () => {
+            await runSimulation();
+        });
+    }
 
-    btn.addEventListener('click', async () => {
-        // Al darle click, usará la memoria global sin borrar el CSV
-        await runSimulation();
+    // 🟢 NUEVO: Escuchadores automáticos. 
+    // Si el usuario cambia la fecha, la estación o el clima, la gráfica se actualiza sola.
+    const controlesDinamicos = ['estacion', 'tipoDia', 'diaEspecifico', 'climaEspecifico'];
+    
+    controlesDinamicos.forEach(id => {
+        const elemento = document.getElementById(id);
+        if (elemento) {
+            elemento.addEventListener('change', async () => {
+                // Solo auto-actualiza si ya se corrió la simulación inicial
+                if (yearlySimulation) {
+                    await runSimulation();
+                }
+            });
+        }
     });
 }
 

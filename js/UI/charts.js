@@ -226,3 +226,84 @@ export function createTemperatureChart(canvasId, simulation) {
         ]
     });
 }
+
+// ============================================
+// GRÁFICA DE DEMANDA NETA VS ORIGINAL
+// ============================================
+export function createNetLoadChart(canvasId, intervals) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+
+    // Destruir gráfica anterior si existe para evitar superposición
+    if (window[canvasId] instanceof Chart) {
+        window[canvasId].destroy();
+    }
+
+    const labels = intervals.map(d => {
+        const h = String(d.hour).padStart(2, '0');
+        const m = String(d.minutes).padStart(2, '0');
+        return `${h}:${m}`;
+    });
+
+    // Demanda Original (Sin FV)
+    const demandaOriginal = intervals.map(d => d.consumption || 0);
+    
+    // Demanda Neta (Lo que le compramos a CFE = Grid Import)
+    const demandaNeta = intervals.map(d => d.gridImport || 0);
+
+    const ctx = canvas.getContext('2d');
+    window[canvasId] = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Demanda Original (Sin Paneles) kW',
+                    data: demandaOriginal,
+                    borderColor: 'rgba(239, 68, 68, 0.4)', // Rojo transparente
+                    backgroundColor: 'rgba(239, 68, 68, 0.05)',
+                    borderWidth: 2,
+                    borderDash: [5, 5], // Línea punteada para indicar que es "teórica"
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 0
+                },
+                {
+                    label: 'Demanda Neta (Facturable a CFE) kW',
+                    data: demandaNeta,
+                    borderColor: 'rgba(37, 99, 235, 1)', // Azul fuerte
+                    backgroundColor: 'rgba(37, 99, 235, 0.2)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 0
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
+            plugins: {
+                legend: { position: 'top' },
+                tooltip: {
+                    callbacks: {
+                        label: (context) => `${context.dataset.label}: ${context.parsed.y.toFixed(2)} kW`
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: { display: true, text: 'Potencia (kW)' }
+                },
+                x: {
+                    ticks: { maxTicksLimit: 24 }
+                }
+            }
+        }
+    });
+}
