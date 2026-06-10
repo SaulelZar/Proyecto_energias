@@ -42,6 +42,11 @@ export function simulateYear({
     let effSum = 0;
     let effCount = 0;
 
+    let totalBlackoutEvents = 0;
+    let currentBlackoutIntervals = 0;
+    let maxBlackoutIntervals = 0;
+    let isCurrentlyInBlackout = false;
+
     // ========================================
     // 🟢 FIX 1 y 2: OPTIMIZACIÓN O(1) Y TIMEZONES
     // Agrupamos los 35,040 registros en un Diccionario (Map) usando la fecha como llave.
@@ -114,10 +119,12 @@ export function simulateYear({
         const dateKey = `${year}-${currentMonth}-${currentDate}`;
         const dayConsumption = consumptionMap.get(dateKey) || Array(INTERVALS_PER_DAY).fill(0);
 
+        // 🟢 FIX: Pasamos 'config' para que el motor sepa de cuánto es la reserva
         const energyDay = simulateEnergySystem({
             solarSimulation: solarDay,
             battery,
-            hourlyConsumption: dayConsumption
+            hourlyConsumption: dayConsumption,
+            config: config 
         });
 
         const dailyEnergy = solarDay.totalEnergyKWh;
@@ -145,6 +152,22 @@ export function simulateYear({
             annualConsumptionEnergy += e.consumption || 0;
             annualGridImport += e.gridImport || 0;
             annualGridExport += e.gridExport || 0;
+
+            if (e.unmetLoad > 0.001) {
+                if (!isCurrentlyInBlackout) {
+                    isCurrentlyInBlackout = true;
+                    totalBlackoutEvents++; // Inicia un nuevo evento
+                }
+                currentBlackoutIntervals++;
+                if (currentBlackoutIntervals > maxBlackoutIntervals) {
+                    maxBlackoutIntervals = currentBlackoutIntervals; // Guardamos el récord
+                }
+            } else {
+                isCurrentlyInBlackout = false;
+                currentBlackoutIntervals = 0; // Se restablece la red, reiniciamos contador
+            }
+
+            annualConsumptionEnergy += e.consumption || 0;
 
             annualResults.push({
                 timestamp,
@@ -188,6 +211,8 @@ export function simulateYear({
         peakPower,
         monthlyEnergy,
         dailyResults,
-        annualResults
+        annualResults,
+        totalBlackoutEvents,
+        maxBlackoutDurationHours: maxBlackoutIntervals * 0.25
     };
 }

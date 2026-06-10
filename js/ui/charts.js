@@ -14,10 +14,18 @@ function safeChart() {
 }
 
 function destroyChart(canvasId) {
-    if (chartRegistry[canvasId]) {
-        chartRegistry[canvasId].destroy();
-        delete chartRegistry[canvasId];
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    
+    // 🟢 FIX: Destrucción absoluta consultando el motor nativo de Chart.js
+    const existingChart = Chart.getChart(canvas);
+    if (existingChart) {
+        existingChart.destroy();
     }
+    
+    // Limpieza de referencias huérfanas
+    if (chartRegistry[canvasId]) delete chartRegistry[canvasId];
+    if (window[canvasId]) delete window[canvasId];
 }
 
 function createLineChart({
@@ -234,10 +242,8 @@ export function createNetLoadChart(canvasId, intervals) {
     const canvas = document.getElementById(canvasId);
     if (!canvas) return;
 
-    // Destruir gráfica anterior si existe para evitar superposición
-    if (window[canvasId] instanceof Chart) {
-        window[canvasId].destroy();
-    }
+    // Destrucción absoluta para evitar colisiones de memoria en WebGL
+    destroyChart(canvasId);
 
     const labels = intervals.map(d => {
         const h = String(d.hour).padStart(2, '0');
@@ -245,14 +251,12 @@ export function createNetLoadChart(canvasId, intervals) {
         return `${h}:${m}`;
     });
 
-    // Demanda Original (Sin FV)
-    const demandaOriginal = intervals.map(d => d.consumption || 0);
-    
-    // Demanda Neta (Lo que le compramos a CFE = Grid Import)
-    const demandaNeta = intervals.map(d => d.gridImport || 0);
+    // Transformación Termodinámica: Energía (kWh) -> Potencia (kW)
+    const demandaOriginal = intervals.map(d => (d.consumption || 0) * 4);
+    const demandaNeta = intervals.map(d => (d.gridImport || 0) * 4);
 
     const ctx = canvas.getContext('2d');
-    window[canvasId] = new Chart(ctx, {
+    chartRegistry[canvasId] = new Chart(ctx, {
         type: 'line',
         data: {
             labels: labels,
@@ -260,10 +264,10 @@ export function createNetLoadChart(canvasId, intervals) {
                 {
                     label: 'Demanda Original (Sin Paneles) kW',
                     data: demandaOriginal,
-                    borderColor: 'rgba(239, 68, 68, 0.4)', // Rojo transparente
+                    borderColor: 'rgba(239, 68, 68, 0.4)',
                     backgroundColor: 'rgba(239, 68, 68, 0.05)',
                     borderWidth: 2,
-                    borderDash: [5, 5], // Línea punteada para indicar que es "teórica"
+                    borderDash: [5, 5],
                     fill: true,
                     tension: 0.4,
                     pointRadius: 0
@@ -271,7 +275,7 @@ export function createNetLoadChart(canvasId, intervals) {
                 {
                     label: 'Demanda Neta (Facturable a CFE) kW',
                     data: demandaNeta,
-                    borderColor: 'rgba(37, 99, 235, 1)', // Azul fuerte
+                    borderColor: 'rgba(37, 99, 235, 1)',
                     backgroundColor: 'rgba(37, 99, 235, 0.2)',
                     borderWidth: 3,
                     fill: true,
@@ -283,27 +287,98 @@ export function createNetLoadChart(canvasId, intervals) {
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: { position: 'top' },
+                tooltip: { callbacks: { label: (c) => `${c.dataset.label}: ${c.parsed.y.toFixed(2)} kW` } }
+            },
+            scales: {
+                y: { beginAtZero: true, title: { display: true, text: 'Potencia (kW)' } },
+                x: { ticks: { maxTicksLimit: 12 } }
+            }
+        }
+    });
+}
+
+// ============================================
+// RENDERIZADO DE GRÁFICAS (CHART.JS)
+// ============================================
+let cfeChartInstance = null; // Variable global para destruir el chart anterior al recalcular
+
+function renderGraficaCFE(genMensual, consMensual) {
+    const ctx = document.getElementById('cfeMonthlyChart');
+    if (!ctx) {
+        console.warn("⚠️ No se encontró el canvas 'cfeMonthlyChart' en el DOM.");
+        return;
+    }
+
+    // Destruir la gráfica anterior si existe (evita el bug de "hover" parpadeante)
+    if (cfeChartInstance) {
+        cfeChartInstance.destroy();
+    }
+
+    const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+
+    cfeChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: meses,
+            datasets: [
+                {
+                    label: 'Consumo Industrial (kWh)',
+                    data: consMensual,
+                    backgroundColor: 'rgba(100, 116, 139, 0.7)', // Gris pizarra
+                    borderColor: 'rgba(100, 116, 139, 1)',
+                    borderWidth: 1,
+                    borderRadius: 4
+                },
+                {
+                    label: 'Generación Solar (kWh)',
+                    data: genMensual,
+                    backgroundColor: 'rgba(34, 197, 94, 0.8)', // Verde CFE / Energía Limpia
+                    borderColor: 'rgba(21, 128, 60, 1)',
+                    borderWidth: 1,
+                    borderRadius: 4
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
             interaction: {
                 mode: 'index',
                 intersect: false,
             },
             plugins: {
-                legend: { position: 'top' },
+                title: {
+                    display: true,
+                    text: 'Balance Energético Anual CFE',
+                    font: { size: 16 }
+                },
                 tooltip: {
                     callbacks: {
-                        label: (context) => `${context.dataset.label}: ${context.parsed.y.toFixed(2)} kW`
+                        label: function(context) {
+                            let value = context.raw || 0;
+                            return `${context.dataset.label}: ${value.toLocaleString('es-MX', {maximumFractionDigits: 0})} kWh`;
+                        }
                     }
                 }
             },
             scales: {
                 y: {
                     beginAtZero: true,
-                    title: { display: true, text: 'Potencia (kW)' }
+                    title: {
+                        display: true,
+                        text: 'Energía (kWh)'
+                    },
+                    grid: { color: 'rgba(0,0,0,0.05)' }
                 },
                 x: {
-                    ticks: { maxTicksLimit: 24 }
+                    grid: { display: false }
                 }
             }
         }
     });
+    
+    console.log("📊 [UI] Gráfica de Balance CFE renderizada correctamente.");
 }

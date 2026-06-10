@@ -4,13 +4,9 @@
 // ============================================
 
 import {
-
     deg2rad,
-
     rad2deg,
-
     clamp
-
 } from './geometry.js';
 
 
@@ -19,47 +15,30 @@ import {
 // ============================================
 
 export function incidenceAngle(
-
     zenith,
-
     solarAzimuth,
-
     panelTilt,
-
     panelAzimuth
-
 ) {
 
     const zenithRad =
         deg2rad(zenith);
-
     const solarAzRad =
         deg2rad(solarAzimuth);
-
     const tiltRad =
         deg2rad(panelTilt);
-
     const panelAzRad =
         deg2rad(panelAzimuth);
-
-
     let cosTheta =
-
         Math.cos(zenithRad) *
-
         Math.cos(tiltRad)
-
         +
-
         Math.sin(zenithRad) *
-
         Math.sin(tiltRad) *
-
         Math.cos(
             solarAzRad -
             panelAzRad
         );
-
 
     // ========================================
     // ESTABILIDAD NUMERICA
@@ -71,8 +50,6 @@ export function incidenceAngle(
             -1,
             1
         );
-
-
     return rad2deg(
 
         Math.acos(cosTheta)
@@ -85,27 +62,18 @@ export function incidenceAngle(
 // ============================================
 
 export function beamComponent(
-
     dni,
-
     incidenceAngleDeg
-
 ) {
 
     dni =
         Number(dni) || 0;
-
-
     const incidenceRad =
         deg2rad(
             incidenceAngleDeg
         );
-
-
     return Math.max(
-
         0,
-
         dni *
         Math.cos(incidenceRad)
     );
@@ -118,25 +86,15 @@ export function beamComponent(
 // ============================================
 
 export function diffuseComponent(
-
     dhi,
-
     panelTilt
-
 ) {
-
     dhi =
         Number(dhi) || 0;
-
-
     const tiltRad =
         deg2rad(panelTilt);
-
-
     return (
-
         dhi *
-
         (
             1 +
             Math.cos(tiltRad)
@@ -144,21 +102,15 @@ export function diffuseComponent(
     );
 }
 
-
 // ============================================
 // COMPONENTE REFLEJADA
 // ============================================
 
 export function groundReflectedComponent(
-
     ghi,
-
     panelTilt,
-
     albedo = 0.2
-
 ) {
-
     ghi =
         Number(ghi) || 0;
 
@@ -168,14 +120,9 @@ export function groundReflectedComponent(
 
     const tiltRad =
         deg2rad(panelTilt);
-
-
     return (
-
         ghi *
-
         albedo *
-
         (
             1 -
             Math.cos(tiltRad)
@@ -209,37 +156,72 @@ export function planeOfArrayIrradiance(
 
 
 // ============================================
-// TEMPERATURA DEL PANEL
-// MODELO NOCT
+// TEMPERATURA DEL PANEL (TRANSITORIO CON SOLUCIÓN ANALÍTICA EXACTA)
 // ============================================
-
 export function panelTemperature(
-
     ambientTemp,
-
     poaIrradiance,
-
-    noct = 45
-
+    windSpeed,
+    nominalEfficiency = 0.22,
+    coolingType = 'none',
+    previousTemp = null,
+    intervalHours = 0.25
 ) {
+    ambientTemp = Number(ambientTemp) || 25;
+    poaIrradiance = Math.max(0, Number(poaIrradiance) || 0);
+    windSpeed = Math.max(0.1, Number(windSpeed) || 0.1); 
 
-    ambientTemp =
-        Number(ambientTemp) || 25;
+    const L = 2.0;
+    const kAir = 0.026;   
+    const nuAir = 1.56e-5; 
+    const Pr = 0.71;      
 
-    poaIrradiance =
-        Number(poaIrradiance) || 0;
+    const Re = (windSpeed * L) / nuAir;
 
+    let Nu = (Re < 500000) 
+        ? 0.664 * Math.pow(Re, 0.5) * Math.pow(Pr, 1/3)
+        : 0.037 * Math.pow(Re, 0.8) * Math.pow(Pr, 1/3);
 
-    return (
+    let hc = (Nu * kAir) / L;
 
-        ambientTemp +
+    let h_back = 5.0; 
+    if (coolingType === 'passive') h_back = 15.0; 
+    else if (coolingType === 'active_air') hc += 25.0; 
+    else if (coolingType === 'active_water') hc += 300.0; 
 
-        (
-            (noct - 20) / 800
-        ) *
+    // Sub-enfriamiento radiativo nocturno (El panel mira al cielo frío espacial)
+    // Asumimos un cielo despejado que está ~15°C más frío que el aire
+    const tSky = ambientTemp - 15; 
+    const hr = 5.5; 
+    const q_rad_loss = hr * (ambientTemp - tSky); // Compensador térmico nocturno
 
-        poaIrradiance
-    );
+    const U = hc + h_back + hr;
+    
+    const alpha = 0.90;
+    // El panel absorbe sol, pierde energía convertida en electricidad, 
+    // y pierde calor radiando hacia la bóveda celeste.
+    const heatAbsorbed = (poaIrradiance * alpha * (1 - nominalEfficiency)) - q_rad_loss;
+
+    // Temperatura de Estado Estacionario (Hacia dónde tiende a ir el panel)
+    const steadyTemp = ambientTemp + (heatAbsorbed / U);
+
+    // ==========================================
+    // LEY DE ENFRIAMIENTO DE NEWTON (ESTABLE)
+    // ==========================================
+    if (previousTemp === null) {
+        return steadyTemp;
+    }
+
+    const C_th = 25000; // Capacidad térmica J/(m²·K)
+    const deltaSeconds = intervalHours * 3600;
+
+    // Calculamos el decaimiento exponencial térmico
+    const exponent = -(U * deltaSeconds) / C_th;
+    
+    // Solución exacta sin oscilaciones numéricas
+    const currentTemp = steadyTemp + (previousTemp - steadyTemp) * Math.exp(exponent);
+
+    return currentTemp;
 }
 
 

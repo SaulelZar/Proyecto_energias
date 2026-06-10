@@ -18,14 +18,18 @@
 <body>
 
     <header class="header">
-        <div class="header-content">
+        <div class="header-content" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
             <div class="logo-container">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path></svg>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path></svg>
                 <div>
                     <h1>Simulador FV Industrial</h1>
                     <p>Motor de Generación & Evaluación GDMTH</p>
                 </div>
             </div>
+            <button id="themeToggle" class="theme-btn">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                Cambiar Tema
+            </button>
         </div>
     </header>
 
@@ -35,78 +39,44 @@
             <div class="sidebar-scroll-area">
                 
                 <section class="control-card">
-                    <h2><span class="icon">📍</span> Ubicación Geográfica</h2>
-                    <div class="input-grid">
-                        <div class="input-group">
-                            <label for="latitud">Latitud</label>
-                            <input type="number" step="any" id="latitud" value="25.6866">
-                        </div>
-                        <div class="input-group">
-                            <label for="longitud">Longitud</label>
-                            <input type="number" step="any" id="longitud" value="-100.3161">
-                        </div>
-                        <div class="input-group full-width">
-                            <label for="altitud">Altitud (msnm)</label>
-                            <input type="number" step="any" id="altitud" value="540">
-                        </div>
-                    </div>
-                </section>
-
-                <section class="control-card">
-                    <h2><span class="icon">⚙️</span> Configuración del Arreglo PV</h2>
-                    <div class="input-grid">
-                        <div class="input-group">
-                            <label for="area">Área (m²)</label>
-                            <input type="number" step="0.1" id="area" value="1000">
-                        </div>
-                        <div class="input-group">
-                            <label for="eficiencia">Eficiencia (%)</label>
-                            <input type="number" step="0.1" id="eficiencia" value="22.5">
-                        </div>
-                        <div class="input-group">
-                            <label for="inclinacion">Inclinación (°)</label>
-                            <input type="number" step="0.1" id="inclinacion" value="25">
-                        </div>
-                        <div class="input-group">
-                            <label for="azimut">Azimut (°)</label>
-                            <input type="number" step="0.1" id="azimut" value="180">
-                        </div>
-                        <div class="input-group full-width">
-                            <label for="tracking">Seguimiento Cinamético</label>
-                            <select id="tracking">
-                                <option value="fixed" selected>Montaje Fijo Estándar</option>
-                                <option value="single">Tracker 1 Eje (Este-Oeste)</option>
-                                <option value="dual">Tracker 2 Ejes</option>
-                            </select>
-                        </div>
-                        <div class="input-group">
-                            <label for="bifacial">Bifacial (%)</label>
-                            <input type="number" step="1" id="bifacial" value="0" min="0" max="100">
-                        </div>
-                        <div class="input-group">
-                            <label for="inversorAC">Límite AC (kW)</label>
-                            <input type="number" step="10" id="inversorAC" value="1000"> 
-                        </div>
-                    </div>
-                </section>
-
-                <section class="control-card">
-                    <h2><span class="icon">🔋</span> Almacenamiento</h2>
-                    <div class="input-grid">
-                        <div class="input-group">
-                            <label for="capacidadBateria">Capacidad (kWh)</label>
-                            <input type="number" step="1" id="capacidadBateria" value="250">
-                        </div>
-                        <div class="input-group">
-                            <label for="socInicial">SOC Inicial (%)</label>
-                            <input type="number" step="1" id="socInicial" value="50" min="0" max="100">
-                        </div>
-                    </div>
-                </section>
-
-                <section class="control-card">
-                    <h2><span class="icon">📊</span> Perfil & Escenario</h2>
+                    <h2><span class="icon">📍</span> Parámetros Base</h2>
+                    
                     <div class="input-group full-width">
+                        <label for="ciudad">Región Industrial (Tarifa CFE)</label>
+                        <select id="ciudad">
+                            <optgroup label="Zona Norte / Desierto (Tarifa GDMTH Alta)">
+                                <option value="monterrey" data-lat="25.6866" data-lon="-100.3161" selected>Monterrey, N.L.</option>
+                                <option value="saltillo" data-lat="25.4215" data-lon="-100.9731">Saltillo, Coah.</option>
+                                <option value="hermosillo" data-lat="29.0729" data-lon="-110.9559">Hermosillo, Son.</option>
+                                <option value="mexicali" data-lat="32.6278" data-lon="-115.4544">Mexicali, B.C.</option>
+                                <option value="tijuana" data-lat="32.5149" data-lon="-117.0382">Tijuana, B.C.</option>
+                                <option value="chihuahua" data-lat="28.6329" data-lon="-106.0691">Chihuahua, Chih.</option>
+                            </optgroup>
+                            <optgroup label="Zona Centro / Bajío (Templado)">
+                                <option value="cdmx" data-lat="19.4326" data-lon="-99.1332">Ciudad de México</option>
+                                <option value="queretaro" data-lat="20.5887" data-lon="-100.3899">Querétaro, Qro.</option>
+                                <option value="bajio" data-lat="21.0178" data-lon="-101.2564">León / Bajío, Gto.</option>
+                                <option value="aguascalientes" data-lat="21.8818" data-lon="-102.2915">Aguascalientes, Ags.</option>
+                                <option value="puebla" data-lat="19.0414" data-lon="-98.2062">Puebla, Pue.</option>
+                            </optgroup>
+                            <optgroup label="Zona Occidente / Pacífico">
+                                <option value="guadalajara" data-lat="20.6597" data-lon="-103.3500">Guadalajara, Jal.</option>
+                                <option value="vallarta" data-lat="20.6534" data-lon="-105.2253">Puerto Vallarta, Jal.</option>
+                                <option value="culiacan" data-lat="24.8016" data-lon="-107.3916">Culiacán, Sin.</option>
+                            </optgroup>
+                            <optgroup label="Zona Sur / Golfo / Península">
+                                <option value="merida" data-lat="20.9674" data-lon="-89.6237">Mérida, Yuc.</option>
+                                <option value="cancun" data-lat="21.1619" data-lon="-86.8515">Cancún, Q.Roo</option>
+                                <option value="veracruz" data-lat="19.1738" data-lon="-96.1342">Veracruz, Ver.</option>
+                                <option value="villahermosa" data-lat="17.9895" data-lon="-92.9281">Villahermosa, Tab.</option>
+                            </optgroup>
+                            <optgroup label="Global">
+                                <option value="custom">Personalizado / Otra ubicación</option>
+                            </optgroup>
+                        </select>
+                    </div>
+
+                    <div class="input-group full-width mt-2">
                         <label for="climaEspecifico">Condición Meteorológica</label>
                         <select id="climaEspecifico">
                             <option value="normal" selected>TMY (Año Típico Estándar)</option>
@@ -144,9 +114,134 @@
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
                             Subir Perfil de Demanda (CSV)
                         </label>
-                        <input type="file" id="csvFile" accept=".csv" style="display: none;">
+                        <input type="file" id="csvFile" accept=".csv" hidden>
                     </div>
                 </section>
+
+                <details class="control-card modular-panel">
+                    <summary class="panel-summary title-blue">⚙️ Ingeniería de Detalle (PV & BESS)</summary>
+                    
+                    <div class="panel-content">
+                        <div class="input-grid mt-2">
+                            <div class="input-group">
+                                <label for="latitud">Latitud</label>
+                                <input type="number" step="any" id="latitud" value="25.6866">
+                            </div>
+                            <div class="input-group">
+                                <label for="longitud">Longitud</label>
+                                <input type="number" step="any" id="longitud" value="-100.3161">
+                            </div>
+                            <div class="input-group full-width">
+                                <label for="altitud">Altitud (msnm)</label>
+                                <input type="number" step="any" id="altitud" value="540">
+                            </div>
+                        </div>
+
+                        <hr class="divider">
+
+                        <div class="input-grid mt-2">
+                            <div class="input-group">
+                                <label for="area">Área (m²)</label>
+                                <input type="number" step="0.1" id="area" value="1000">
+                            </div>
+                            <div class="input-group">
+                                <label for="eficiencia">Eficiencia (%)</label>
+                                <input type="number" step="0.1" id="eficiencia" value="22.5">
+                            </div>
+                            <div class="input-group">
+                                <label for="inclinacion">Inclinación (°)</label>
+                                <input type="number" step="0.1" id="inclinacion" value="25" min="5" max="60">
+                            </div>
+                            <div class="input-group">
+                                <label for="azimut">Azimut (°)</label>
+                                <input type="number" step="0.1" id="azimut" value="180">
+                            </div>
+                            <div class="input-group full-width">
+                                <label for="tracking">Seguimiento Cinemático</label>
+                                <select id="tracking">
+                                    <option value="fixed" selected>Montaje Fijo Estándar</option>
+                                    <option value="single">Tracker 1 Eje (Este-Oeste)</option>
+                                    <option value="dual">Tracker 2 Ejes</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label for="bifacial">Bifacial (%)</label>
+                                <input type="number" step="1" id="bifacial" value="0" min="0" max="100">
+                            </div>
+                            <div class="input-group">
+                                <label for="inversorAC">Límite AC (kW)</label>
+                                <input type="number" step="10" id="inversorAC" value="1000"> 
+                            </div>
+                            <div class="input-group full-width mt-2">
+                                <label for="enfriamiento">Sistema de Enfriamiento Térmico</label>
+                                <select id="enfriamiento">
+                                    <option value="none" selected>Ninguno (Convección Natural)</option>
+                                    <option value="passive">Disipadores Pasivos (Aletas traseras / 0 W)</option>
+                                    <option value="active_air">Ventilación Forzada (~5 W/m²)</option>
+                                    <option value="active_water">Irrigación por Agua (~12 W/m²)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <hr class="divider">
+
+                        <div class="input-grid mt-2">
+                            <div class="input-group">
+                                <label for="capacidadBateria">Capacidad (kWh)</label>
+                                <input type="number" step="1" id="capacidadBateria" value="1000">
+                            </div>
+                            <div class="input-group">
+                                <label for="socInicial">SOC Inicial (%)</label>
+                                <input type="number" step="1" id="socInicial" value="50" min="0" max="100">
+                            </div>
+                            <div class="input-group">
+                                <label for="reservaRespaldo">Reserva UPS (%)</label>
+                                <input type="number" step="1" id="reservaRespaldo" value="30" min="0" max="100">
+                            </div>
+                            <div class="input-group">
+                                <label for="fallaRed">Estabilidad CFE (%)</label>
+                                <input type="number" step="0.1" id="fallaRed" value="99.5" min="0" max="100">
+                            </div>
+                        </div>
+                    </div>
+                </details>
+
+                <details class="control-card modular-panel">
+                    <summary class="panel-summary title-green">💰 Estrategia y Presupuesto</summary>
+                    
+                    <div class="panel-content">
+                        <div class="input-group full-width mt-2">
+                            <label for="modoAutoSizing">Objetivo del Diseño</label>
+                            <select id="modoAutoSizing">
+                                <option value="net_zero" selected>Net Zero (Balance CFE Anual, Batería UPS)</option>
+                                <option value="off_grid">Autarquía (100% Cobertura Solar, Cero CFE)</option>
+                                <option value="fixed_area">Resiliencia (Área Fija, Batería UPS Crítica)</option>
+                            </select>
+                        </div>
+
+                        <div class="input-grid mt-2">
+                            <div class="input-group">
+                                <label for="costoPanelWp">Módulos (MXN/Wp)</label>
+                                <input type="number" step="0.50" id="costoPanelWp" value="6.00">
+                            </div>
+                            <div class="input-group">
+                                <label for="costoBateriaKWh">Batería (MXN/kWh)</label>
+                                <input type="number" step="100" id="costoBateriaKWh" value="7000">
+                            </div>
+                            <div class="input-group full-width">
+                                <label for="costoInversorKW">Inversores (MXN/kW)</label>
+                                <input type="number" step="100" id="costoInversorKW" value="2000">
+                            </div>
+                        </div>
+                    </div>
+                </details>
+
+                <button id="btnAutoSizing" class="btn-auto-sizing mt-4">
+                    <svg class="svg-icon" height="20" width="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
+                        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>
+                    </svg>
+                    Auto-Dimensionar Sistema Mínimo Viable
+                </button>
                 
                 <div id="statusMessage"></div>
             </div>
@@ -163,13 +258,19 @@
 
             <section class="dashboard">
                 <div class="card kpi-card">
+                    <div class="kpi-icon yellow">💲</div>
+                    <div>
+                        <h3>Inversión Inicial (CAPEX)</h3>
+                        <p id="kpiCapex">$0</p>
+                    </div>
+                </div>
+                <div class="card kpi-card">
                     <div class="kpi-icon blue">⚡</div>
                     <div>
                         <h3>Generación Anual</h3>
                         <p id="genAnual">0 <span>kWh</span></p>
                     </div>
                 </div>
-
                 <div class="card kpi-card">
                     <div class="kpi-icon orange">🔥</div>
                     <div>
@@ -177,7 +278,6 @@
                         <p id="efSistema">0<span>%</span></p>
                     </div>
                 </div>
-
                 <div class="card kpi-card">
                     <div class="kpi-icon green">🛡️</div>
                     <div>
@@ -185,7 +285,6 @@
                         <p id="cobertura">0<span>%</span></p>
                     </div>
                 </div>
-
                 <div class="card kpi-card">
                     <div class="kpi-icon purple">📈</div>
                     <div>
@@ -193,7 +292,75 @@
                         <p id="potenciaPico">0 <span>kW</span></p>
                     </div>
                 </div>
+                <div class="card kpi-card">
+                    <div class="kpi-icon red">🚨</div>
+                    <div>
+                        <h3>Eventos de Apagón</h3>
+                        <p id="kpiApagones">0</p>
+                    </div>
+                </div>
+                <div class="card kpi-card">
+                    <div class="kpi-icon slate">⏱️</div>
+                    <div>
+                        <h3>Apagón Máximo</h3>
+                        <p id="kpiMaxApagon">0 <span>hrs</span></p>
+                    </div>
+                </div>
+                <div class="card kpi-card">
+                    <div class="kpi-icon red">📜</div>
+                    <div>
+                        <h3>Recibo Original CFE</h3>
+                        <p id="kpiGastoOriginal">$0</p>
+                    </div>
+                </div>
+                <div class="card kpi-card">
+                    <div class="kpi-icon blue">📉</div>
+                    <div>
+                        <h3>Nuevo Recibo CFE</h3>
+                        <p id="kpiGastoNuevo">$0</p>
+                    </div>
+                </div>
+                <div class="card kpi-card">
+                    <div class="kpi-icon green">💵</div>
+                    <div>
+                        <h3>Ahorro Anual (Bruto)</h3>
+                        <p id="kpiAhorro">$0</p>
+                    </div>
+                </div>
+                <div class="card kpi-card">
+                    <div class="kpi-icon purple">⏱️</div>
+                    <div>
+                        <h3>Retorno de Inversión (ROI)</h3>
+                        <p id="kpiROI">0 <span>Años</span></p>
+                    </div>
+                </div>
             </section>
+
+            <!-- 🟢 CONTROLES DE ESCALA TEMPORAL (CON CLASES ASIGNADAS) -->
+            <div class="time-scale-controls">
+                <label class="time-scale-label">Resolución de Gráficas:</label>
+                
+                <select id="escalaTiempo" class="time-scale-select">
+                    <option value="dia" selected>Día Específico (Flujo en kW)</option>
+                    <option value="mes">Mes Específico (Volumen en kWh)</option>
+                    <option value="ano">Año Completo (Acumulado Mensual en kWh)</option>
+                </select>
+
+                <select id="mesSelector" class="time-scale-select hidden">
+                    <option value="0">Enero</option>
+                    <option value="1">Febrero</option>
+                    <option value="2">Marzo</option>
+                    <option value="3">Abril</option>
+                    <option value="4">Mayo</option>
+                    <option value="5">Junio</option>
+                    <option value="6">Julio</option>
+                    <option value="7">Agosto</option>
+                    <option value="8">Septiembre</option>
+                    <option value="9">Octubre</option>
+                    <option value="10">Noviembre</option>
+                    <option value="11">Diciembre</option>
+                </select>
+            </div>
 
             <div class="charts-grid">
                 <section class="chart-container span-2">
@@ -206,33 +373,6 @@
                     </div>
                 </section>
 
-                <section class="chart-container">
-                    <div class="chart-header">
-                        <h2>Estado de Carga</h2>
-                    </div>
-                    <div class="canvas-wrapper">
-                        <canvas id="batteryChart"></canvas>
-                    </div>
-                </section>
-
-                <section class="chart-container">
-                    <div class="chart-header">
-                        <h2>Irradiancia Transpuesta (POA)</h2>
-                    </div>
-                    <div class="canvas-wrapper">
-                        <canvas id="irradianceChart"></canvas>
-                    </div>
-                </section>
-
-                <section class="chart-container span-2">
-                    <div class="chart-header">
-                        <h2>Termodinámica del Módulo</h2>
-                    </div>
-                    <div class="canvas-wrapper heat-chart">
-                        <canvas id="temperatureChart"></canvas>
-                    </div>
-                </section>
-
                 <section class="chart-container span-2">
                     <div class="chart-header">
                         <h2>Comparativa: Demanda Original vs. Demanda con Inyección Solar</h2>
@@ -242,8 +382,54 @@
                         <canvas id="netLoadChart"></canvas>
                     </div>
                 </section>
-            </div>
+                
+                <section class="chart-container span-2">
+                    <div class="chart-header">
+                        <h2>Balance Energético Anual CFE</h2>
+                        <span class="badge">Resolución: Mensual (Facturación)</span>
+                    </div>
+                    <div class="canvas-wrapper" style="min-height: 300px;">
+                        <canvas id="cfeMonthlyChart"></canvas>
+                    </div>
+                </section>
+                
+                <details class="span-2 advanced-charts-panel">
+                    <summary class="chart-summary-toggle">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px; vertical-align: middle;"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                        Ver Análisis Termodinámico y de Almacenamiento
+                    </summary>
+                    
+                    <div class="charts-grid mt-4">
+                        <section class="chart-container">
+                            <div class="chart-header">
+                                <h2>Estado de Carga (SOC)</h2>
+                            </div>
+                            <div class="canvas-wrapper">
+                                <canvas id="batteryChart"></canvas>
+                            </div>
+                        </section>
 
+                        <section class="chart-container">
+                            <div class="chart-header">
+                                <h2>Irradiancia Transpuesta (POA)</h2>
+                            </div>
+                            <div class="canvas-wrapper">
+                                <canvas id="irradianceChart"></canvas>
+                            </div>
+                        </section>
+
+                        <section class="chart-container span-2">
+                            <div class="chart-header">
+                                <h2>Termodinámica del Módulo</h2>
+                            </div>
+                            <div class="canvas-wrapper heat-chart">
+                                <canvas id="temperatureChart"></canvas>
+                            </div>
+                        </section>
+                    </div>
+                </details>
+
+            </div>
         </main>
     </div>
 

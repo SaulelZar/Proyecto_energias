@@ -1,295 +1,253 @@
 /* =========================================
-   VARIABLES
+   VARIABLES DE TEMA (MODO OSCURO MILITAR POR DEFECTO)
 ========================================= */
 :root {
-    --bg-body: #f4f7f9;
-    --bg-card: #ffffff;
-    --bg-sidebar: #1e293b;
+    --bg-body: #141612;      /* Verde oscuro casi negro */
+    --bg-card: #1d211a;      /* Verde blindaje */
+    --bg-sidebar: #181a15;   /* Fondo panel de control */
+    --text-main: #cbd5e1;
+    --text-title: #f1f5f9;
+    --text-light: #8b9986;   /* Texto secundario oliva */
+    
+    --primary: #5d7541;      /* Verde Oliva Táctico */
+    --primary-hover: #759153;/* Oliva brillante */
+    --accent: #84cc16;       /* Lima para contrastes de energía */
+    
+    --border: #2c3327;       /* Bordes panel industrial */
+    --border-dark: #1b2118;
+    
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.5);
+    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.5), 0 2px 4px -1px rgba(0,0,0,0.3);
+    
+    --radius: 6px;           /* Bordes más cuadrados (estilo industrial/SCADA) */
+    
+    /* Colores KPI Muteados para unificar estilo */
+    --kpi-yellow: #ca8a04;
+    --kpi-blue: #0284c7;
+    --kpi-orange: #ea580c;
+    --kpi-green: #16a34a;
+    --kpi-purple: #7c3aed;
+    --kpi-red: #dc2626;
+    --kpi-slate: #64748b;
+}
+
+/* =========================================
+   VARIABLES DE TEMA (MODO CLARO ARENA/OLIVA)
+========================================= */
+[data-theme="light"] {
+    --bg-body: #f1f2ec;      /* Khaki claro */
+    --bg-card: #ffffff;      /* Blanco puro para gráficas */
+    --bg-sidebar: #e8eae1;   /* Arena industrial */
     --text-main: #334155;
     --text-title: #0f172a;
-    --text-light: #94a3b8;
-    --primary: #3b82f6;
-    --primary-hover: #2563eb;
-    --accent: #0ea5e9;
-    --border: #e2e8f0;
-    --border-dark: #334155;
+    --text-light: #5f6b58;
+    
+    --primary: #465c2f;      /* Verde Militar Profundo */
+    --primary-hover: #5d7541;
+    --accent: #65a30d;
+    
+    --border: #d1d6cb;
+    --border-dark: #b8c0b1;
+    
     --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
-    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
-    --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
-    --radius: 12px;
+    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
 }
 
 /* =========================================
    RESET & BASICS
 ========================================= */
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: 'Inter', sans-serif; background: var(--bg-body); color: var(--text-main); min-height: 100vh; }
+body { font-family: 'Inter', sans-serif; background: var(--bg-body); color: var(--text-main); min-height: 100vh; transition: background 0.3s ease, color 0.3s ease; }
 
 /* =========================================
-   HEADER
+   HEADER & THEME TOGGLE
 ========================================= */
 .header {
-    background: #0f172a;
-    color: white;
+    background: var(--bg-sidebar);
+    border-bottom: 2px solid var(--primary);
+    color: var(--text-title);
     padding: 1rem 2rem;
     box-shadow: var(--shadow-md);
     position: sticky;
     top: 0;
     z-index: 100;
+    transition: background 0.3s ease;
 }
 .header-content { max-width: 1600px; margin: 0 auto; }
 .logo-container { display: flex; align-items: center; gap: 1rem; }
 .header h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; }
-.header p { color: #94a3b8; font-size: 0.85rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px;}
+.header p { color: var(--text-light); font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px;}
 
-/* =========================================
-   LAYOUT
-========================================= */
-.container {
-    display: grid;
-    grid-template-columns: 360px 1fr;
-    min-height: calc(100vh - 70px);
-    max-width: 1800px;
-    margin: 0 auto;
-}
-
-/* =========================================
-   SIDEBAR (Estilo Industrial / Dark Mode)
-========================================= */
-.sidebar {
-    background: var(--bg-sidebar);
-    color: white;
+.theme-btn {
     display: flex;
-    flex-direction: column;
-    border-right: 1px solid var(--border-dark);
-    height: calc(100vh - 70px);
-    position: sticky;
-    top: 70px;
-}
-.sidebar-scroll-area {
-    padding: 1.5rem;
-    overflow-y: auto;
-    flex: 1;
-}
-
-/* Scrollbar personalizada oscura */
-.sidebar-scroll-area::-webkit-scrollbar { width: 6px; }
-.sidebar-scroll-area::-webkit-scrollbar-track { background: #1e293b; }
-.sidebar-scroll-area::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
-
-/* Tarjetas dentro del Sidebar */
-.control-card {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    color: var(--text-title);
+    border: 1px solid var(--border);
+    padding: 8px 16px;
     border-radius: var(--radius);
-    padding: 1.25rem;
-    margin-bottom: 1.5rem;
-}
-.control-card h2 {
-    font-size: 0.9rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #cbd5e1;
-    margin-bottom: 1rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    padding-bottom: 0.75rem;
-}
-.control-card h2 .icon { font-size: 1.1rem; }
-
-/* Grid de Inputs */
-.input-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.75rem;
-}
-.full-width { grid-column: span 2; }
-.mt-2 { margin-top: 0.5rem; }
-
-/* Estilos de Inputs */
-.input-group label {
-    display: block;
-    margin-bottom: 0.4rem;
-    font-size: 0.75rem;
-    color: #94a3b8;
-    font-weight: 500;
-}
-.input-group input, .input-group select {
-    width: 100%;
-    padding: 0.6rem;
-    background: #0f172a;
-    border: 1px solid #334155;
-    color: white;
-    border-radius: 6px;
-    font-size: 0.85rem;
-    font-family: inherit;
-    transition: all 0.2s;
-    color-scheme: dark;
-}
-.input-group input:focus, .input-group select:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
-}
-
-/* =========================================
-   BOTONES Y UPLOADS
-========================================= */
-.upload-container { margin-top: 1.5rem; }
-.upload-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    width: 100%;
-    padding: 0.75rem;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px dashed #64748b;
-    border-radius: 6px;
-    color: #cbd5e1;
-    font-size: 0.85rem;
     cursor: pointer;
-    transition: all 0.2s;
+    font-weight: 600;
+    transition: all 0.2s ease;
 }
-.upload-btn:hover { background: rgba(255, 255, 255, 0.1); border-color: #94a3b8; }
-
-.sidebar-footer {
-    padding: 1.5rem;
-    background: #1e293b;
-    border-top: 1px solid var(--border-dark);
-}
-#calcularBtn {
-    width: 100%;
-    padding: 1rem;
+.theme-btn:hover {
     background: var(--primary);
     color: white;
-    border: none;
-    border-radius: 8px;
-    font-weight: 600;
-    font-size: 1rem;
-    cursor: pointer;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 0.5rem;
-    transition: all 0.2s;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-}
-#calcularBtn:hover {
-    background: var(--primary-hover);
-    transform: translateY(-2px);
-}
-
-#statusMessage {
-    margin-top: 1rem;
-    padding: 0.75rem;
-    border-radius: 6px;
-    background: rgba(16, 185, 129, 0.1);
-    color: #10b981;
-    font-size: 0.8rem;
-    text-align: center;
-    display: none; /* Oculto por defecto, se muestra por JS */
+    border-color: var(--primary);
 }
 
 /* =========================================
-   MAIN CONTENT & KPIs
+   LAYOUT & SIDEBAR
 ========================================= */
-.main-content {
-    padding: 2rem;
-    overflow-y: auto;
-    height: calc(100vh - 70px);
-}
+.container { display: grid; grid-template-columns: 360px 1fr; min-height: calc(100vh - 70px); max-width: 1800px; margin: 0 auto; }
+.sidebar { background: var(--bg-sidebar); border-right: 1px solid var(--border-dark); display: flex; flex-direction: column; height: calc(100vh - 70px); position: sticky; top: 70px; transition: background 0.3s ease; }
+.sidebar-scroll-area { padding: 1.5rem; overflow-y: auto; flex: 1; }
+.sidebar-scroll-area::-webkit-scrollbar { width: 6px; }
+.sidebar-scroll-area::-webkit-scrollbar-track { background: var(--bg-sidebar); }
+.sidebar-scroll-area::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
 
-.dashboard {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 2rem;
-}
+/* Tarjetas (SCADA Style) */
+.control-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1.5rem; box-shadow: var(--shadow-sm); transition: all 0.3s ease; }
+.control-card h2 { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-title); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem; }
 
-.card {
-    background: var(--bg-card);
-    border-radius: var(--radius);
-    padding: 1.5rem;
-    box-shadow: var(--shadow-sm);
-    border: 1px solid var(--border);
-    transition: box-shadow 0.2s;
-}
-.card:hover { box-shadow: var(--shadow-md); }
+.input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+.full-width { grid-column: span 2; }
+.mt-2 { margin-top: 0.5rem; }
+.mt-4 { margin-top: 1.5rem; }
 
-.kpi-card { display: flex; align-items: center; gap: 1rem; }
-.kpi-icon {
-    width: 50px;
-    height: 50px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-}
-.kpi-icon.blue { background: #eff6ff; color: #3b82f6; }
-.kpi-icon.orange { background: #fff7ed; color: #f97316; }
-.kpi-icon.green { background: #ecfdf5; color: #10b981; }
-.kpi-icon.purple { background: #f5f3ff; color: #8b5cf6; }
-
-.kpi-card h3 { font-size: 0.85rem; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem; }
-.kpi-card p { font-size: 1.75rem; font-weight: 700; color: var(--text-title); }
-.kpi-card p span { font-size: 0.9rem; color: var(--text-light); font-weight: 500; margin-left: 4px; }
+/* Inputs Tácticos */
+.input-group label { display: block; margin-bottom: 0.4rem; font-size: 0.75rem; color: var(--text-light); font-weight: 600; text-transform: uppercase;}
+.input-group input, .input-group select { width: 100%; padding: 0.6rem; background: var(--bg-body); border: 1px solid var(--border); color: var(--text-main); border-radius: var(--radius); font-size: 0.85rem; font-family: inherit; transition: all 0.2s; }
+.input-group input:focus, .input-group select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(93, 117, 65, 0.2); }
 
 /* =========================================
-   CHARTS GRID
+   REVELACIÓN PROGRESIVA (MENÚS DESPLEGABLES)
 ========================================= */
-.charts-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.5rem;
-}
-.chart-container {
-    background: var(--bg-card);
-    padding: 1.5rem;
-    border-radius: var(--radius);
-    box-shadow: var(--shadow-sm);
-    border: 1px solid var(--border);
-}
+.modular-panel { margin-bottom: 1rem; border-radius: var(--radius); }
+.panel-summary { cursor: pointer; font-weight: 600; padding: 10px 0; list-style: none; display: flex; align-items: center; user-select: none; color: var(--primary-hover); text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px;}
+.panel-summary::-webkit-details-marker { display: none; }
+.panel-content { margin-top: 15px; animation: fadeIn 0.3s ease-in-out; }
+.divider { border: 0; height: 1px; background: var(--border); margin: 20px 0 10px 0; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+
+/* =========================================
+   BOTONES
+========================================= */
+.upload-btn { display: flex; align-items: center; justify-content: center; gap: 0.5rem; width: 100%; padding: 0.75rem; background: transparent; border: 1px dashed var(--text-light); border-radius: var(--radius); color: var(--text-main); font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.upload-btn:hover { background: var(--border); color: var(--primary-hover); border-color: var(--primary); }
+
+.btn-auto-sizing { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 0.85rem; background: rgba(93, 117, 65, 0.1); color: var(--primary-hover); border: 1px solid var(--primary); border-radius: var(--radius); font-size: 0.9rem; font-weight: 600; text-transform: uppercase; cursor: pointer; transition: all 0.2s; }
+.btn-auto-sizing:hover:not(:disabled) { background: var(--primary); color: white; box-shadow: 0 0 10px rgba(93, 117, 65, 0.4); }
+.btn-auto-sizing:disabled { cursor: wait; opacity: 0.5; border-color: var(--border); color: var(--text-light); }
+
+.sidebar-footer { padding: 1.5rem; background: var(--bg-sidebar); border-top: 1px solid var(--border-dark); }
+#calcularBtn { width: 100%; padding: 1rem; background: var(--primary); color: white; border: none; border-radius: var(--radius); font-weight: 600; font-size: 1rem; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 0.5rem; transition: all 0.2s; box-shadow: var(--shadow-sm); }
+#calcularBtn:hover { background: var(--primary-hover); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+
+/* =========================================
+   DASHBOARD & KPIs (UNIFICADOS)
+========================================= */
+.main-content { padding: 2rem; overflow-y: auto; height: calc(100vh - 70px); }
+.dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+
+.card { background: var(--bg-card); border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow-sm); border: 1px solid var(--border); transition: all 0.3s; }
+.kpi-card { display: flex; align-items: center; gap: 1rem; border-left: 4px solid var(--border); }
+.kpi-card:hover { border-left-color: var(--primary); box-shadow: var(--shadow-md); transform: translateX(2px); }
+
+/* Iconos austeros y técnicos */
+.kpi-icon { width: 45px; height: 45px; border-radius: var(--radius); display: flex; align-items: center; justify-content: center; font-size: 1.3rem; background: var(--bg-body); border: 1px solid var(--border); }
+.kpi-icon.yellow { color: var(--kpi-yellow); }
+.kpi-icon.blue { color: var(--kpi-blue); }
+.kpi-icon.orange { color: var(--kpi-orange); }
+.kpi-icon.green { color: var(--kpi-green); }
+.kpi-icon.purple { color: var(--kpi-purple); }
+.kpi-icon.red { color: var(--kpi-red); }
+.kpi-icon.slate { color: var(--kpi-slate); }
+
+.kpi-card h3 { font-size: 0.75rem; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem; font-weight: 700; }
+.kpi-card p { font-size: 1.6rem; font-weight: 700; color: var(--text-title); }
+.kpi-card p span { font-size: 0.85rem; color: var(--text-light); font-weight: 600; margin-left: 4px; }
+
+/* =========================================
+   GRÁFICAS & CONTROLES TEMPORALES
+========================================= */
+.time-scale-controls { display: flex; justify-content: flex-end; align-items: center; gap: 15px; margin-bottom: 15px; background: var(--bg-card); padding: 10px 20px; border-radius: var(--radius); border: 1px solid var(--border); }
+.time-scale-label { color: var(--text-title); font-weight: 600; font-size: 0.85rem; text-transform: uppercase;}
+.time-scale-select { background: var(--bg-body); color: var(--text-main); border: 1px solid var(--border); padding: 6px 12px; border-radius: var(--radius); cursor: pointer; outline: none; font-weight: 500; transition: all 0.2s; }
+.time-scale-select:hover { border-color: var(--primary); }
+.hidden { display: none !important; }
+
+.charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+.chart-container { background: var(--bg-card); padding: 1.5rem; border-radius: var(--radius); box-shadow: var(--shadow-sm); border: 1px solid var(--border); }
 .chart-container.span-2 { grid-column: span 2; }
-
-.chart-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
-    border-bottom: 1px solid var(--border);
-    padding-bottom: 1rem;
-}
-.chart-header h2 { font-size: 1.1rem; color: var(--text-title); }
-.badge {
-    background: #f1f5f9;
-    color: #475569;
-    padding: 0.25rem 0.75rem;
-    border-radius: 999px;
-    font-size: 0.75rem;
-    font-weight: 600;
-}
-
-.canvas-wrapper {
-    position: relative;
-    height: 300px;
-    width: 100%;
-}
+.chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem; }
+.chart-header h2 { font-size: 1rem; color: var(--text-title); text-transform: uppercase; font-weight: 700;}
+.badge { background: var(--bg-body); color: var(--primary-hover); padding: 0.25rem 0.75rem; border-radius: 4px; border: 1px solid var(--border); font-size: 0.75rem; font-weight: 600; }
+.canvas-wrapper { position: relative; height: 300px; width: 100%; }
 .canvas-wrapper.heat-chart { height: 250px; }
 
+.advanced-charts-panel { background: var(--bg-body); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-top: 20px; }
+.chart-summary-toggle { cursor: pointer; color: var(--text-main); font-weight: 600; font-size: 1rem; text-align: center; list-style: none; text-transform: uppercase; transition: color 0.2s;}
+.chart-summary-toggle:hover { color: var(--primary-hover); }
 /* =========================================
-   RESPONSIVE
+   GRÁFICAS & CONTROLES TEMPORALES (DISEÑO TÁCTICO)
 ========================================= */
-@media(max-width: 1200px) {
-    .charts-grid { grid-template-columns: 1fr; }
-    .chart-container.span-2 { grid-column: span 1; }
+.time-scale-controls { 
+    display: flex; 
+    justify-content: flex-end; 
+    align-items: center; 
+    gap: 15px; 
+    margin-bottom: 15px; 
+    background: var(--bg-card); 
+    padding: 12px 20px; 
+    border-radius: var(--radius); 
+    border: 1px solid var(--border); 
+    box-shadow: var(--shadow-sm);
 }
 
-@media(max-width: 900px) {
-    .container { grid-template-columns: 1fr; }
-    .sidebar { height: auto; position: static; border-right: none; border-bottom: 1px solid var(--border-dark); }
-    .main-content { height: auto; }
+.time-scale-label { 
+    color: var(--text-title); 
+    font-weight: 700; 
+    font-size: 0.85rem; 
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
+
+.time-scale-select { 
+    appearance: none; /* Destruye el diseño por defecto del navegador */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-color: var(--bg-body); 
+    color: var(--text-main); 
+    border: 1px solid var(--border); 
+    padding: 8px 36px 8px 16px; /* Espacio extra a la derecha para nuestra propia flecha */
+    border-radius: var(--radius); 
+    cursor: pointer; 
+    outline: none; 
+    font-weight: 600; 
+    font-size: 0.85rem;
+    transition: all 0.2s ease; 
+    
+    /* Inyectamos una flecha SVG con el color de nuestro texto secundario */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238b9986' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+}
+
+.time-scale-select:hover,
+.time-scale-select:focus { 
+    border-color: var(--primary); 
+    box-shadow: 0 0 0 2px rgba(93, 117, 65, 0.2); 
+    /* La flecha SVG se ilumina en Verde Oliva al pasar el cursor */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23759153' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+}
+
+/* Evita que el texto negro aparezca dentro de las opciones en algunos navegadores */
+.time-scale-select option {
+    background-color: var(--bg-card);
+    color: var(--text-main);
+}
+
+.hidden { display: none !important; }
