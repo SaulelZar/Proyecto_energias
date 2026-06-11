@@ -13,10 +13,11 @@ import {
     createIrradianceChart,
     createBatteryChart,
     createTemperatureChart,
-    createNetLoadChart
+    createNetLoadChart,
+    createCashFlowChart
 } from './ui/charts.js';
 
-import { readCSV } from './utils/csv.js';
+import { readCSV, generarPerfilSintetico } from './utils/csv.js';
 
 import {
     getConfigFromUI,
@@ -126,6 +127,17 @@ function renderGraficaCFE(genMensual, consMensual) {
 // ============================================
 async function runSimulation() {
     try {
+        // 🟢 NUEVO: Evaluador de Fuente de Demanda (Módulo Express vs CSV)
+        const selectorSintetico = document.querySelector('input[name="fuenteDemanda"]:checked');
+        if (selectorSintetico && selectorSintetico.value === 'sintetico') {
+            // Lee el input de la UI y crea las 35,040 filas en la RAM al instante
+            const consumoMes = Number(document.getElementById('consumoMensualEstimado').value) || 0;
+            currentCsvData = generarPerfilSintetico(consumoMes, 2026);
+        } else if (currentCsvData.length === 0) {
+            console.warn("Esperando datos de CSV o Módulo Express...");
+            return;
+        }
+
         const config = getConfigFromUI();
         
         const coordsKey = `${config.latitude},${config.longitude}`;
@@ -154,8 +166,14 @@ async function runSimulation() {
         // Disparos a la UI (KPIs y Finanzas)
         updateKPIs(yearlySimulation);
         const totalCAPEX = calcularFinanzas(config, capacidadReal);
-        const finanzasCFE = calcularAhorroCFE(yearlySimulation);
-        actualizarKPIsFinancieros(finanzasCFE, totalCAPEX);
+
+        // 🟢 FIX: Pasamos la configuración para que evalúe la tarifa correcta
+        const finanzasCFE = calcularAhorroCFE(yearlySimulation, config);
+        
+        // 🟢 FIX: Capturamos el objeto completo y pasamos ambas variables a la gráfica
+        const finanzasResult = actualizarKPIsFinancieros(finanzasCFE, totalCAPEX, yearlySimulation, config);
+        
+        createCashFlowChart('cashflowChart', totalCAPEX, finanzasResult.ahorroTotal, finanzasResult.gastoNuevo, 10);
 
         // 🟢 CÓDIGO CORREGIDO:
         // Disparos a los Gráficos Principales
@@ -422,7 +440,67 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    // 🟢 Alternador Visual: Módulo Express vs CSV
+    document.querySelectorAll('input[name="fuenteDemanda"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            const esSintetico = e.target.value === 'sintetico';
+            document.getElementById('containerSintetico')?.classList.toggle('hidden', !esSintetico);
+            document.getElementById('containerCSV')?.classList.toggle('hidden', esSintetico);
+        });
+    });
+
+    // 🟢 Pre-carga sintética para el Auto-Dimensionamiento
+    document.getElementById('btnAutoSizing')?.addEventListener('click', () => {
+        const selectorSintetico = document.querySelector('input[name="fuenteDemanda"]:checked');
+        if (selectorSintetico && selectorSintetico.value === 'sintetico') {
+            const consumoMes = Number(document.getElementById('consumoMensualEstimado').value) || 0;
+            currentCsvData = generarPerfilSintetico(consumoMes, 2026);
+        }
+        autoDimensionarSistema(getConfigFromUI(), hourlyWeather, currentCsvData, runSimulation);
+    });
+
+    // 🟢 ALGORITMO DE INCLINACIÓN ÓPTIMA AUTOMÁTICA
+    document.getElementById('ciudad')?.addEventListener('change', function() {
+        if (this.value === 'custom') return;
+        const lat = parseFloat(this.options[this.selectedIndex].getAttribute('data-lat'));
+        // Regla heurística global: Tilt Óptimo = Latitud Local
+        document.getElementById('inclinacion').value = Math.abs(lat).toFixed(1);
+    });
+
+    // 🟢 TOGGLE DEL MÓDULO EXPRESS
+    document.getElementById('checkExpress')?.addEventListener('change', function() {
+        const container = document.getElementById('costoExpressContainer');
+        this.checked ? container.classList.remove('hidden') : container.classList.add('hidden');
+    });
+
+    // 🟢 CÁLCULO DE BATERÍA BASADO EN CARGA CRÍTICA (Resiliencia)
+    function autoSizeBESS() {
+        const carga = parseFloat(document.getElementById('cargaCritica').value) || 0;
+        const horas = parseFloat(document.getElementById('horasRespaldo').value) || 0;
+        if (carga > 0 && horas > 0) {
+            // Capacidad = Carga * Horas / 0.8 (Profundidad de descarga)
+            document.getElementById('capacidadBateria').value = Math.ceil((carga * horas) / 0.8);
+        }
+    }
+    document.getElementById('cargaCritica')?.addEventListener('input', autoSizeBESS);
+    document.getElementById('horasRespaldo')?.addEventListener('input', autoSizeBESS);
+
+    // 🟢 FLUJO DEL WIZARD PROGRESIVO
+    document.querySelectorAll('.btn-step').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const targetId = e.target.getAttribute('data-target');
+            const targetPanel = document.getElementById(targetId);
+            if (targetPanel) {
+                targetPanel.classList.remove('locked-panel'); // Desbloquea
+                targetPanel.open = true; // Despliega la pestaña
+                e.target.style.display = 'none'; // Oculta el botón actual
+            }
+        });
+    });
 });
+
+
 
 // ============================================
 // BOOTSTRAP

@@ -382,3 +382,93 @@ function renderGraficaCFE(genMensual, consMensual) {
     
     console.log("📊 [UI] Gráfica de Balance CFE renderizada correctamente.");
 }
+
+// UBICACIÓN: charts.js -> Reemplaza la función createCashflowChart completa
+
+export function createCashFlowChart(canvasId, capexTotal, ahorroAnualIntegral, gastoNuevo, años = 10) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+
+    if (window[canvasId] instanceof Chart) {
+        window[canvasId].destroy();
+    } else if (chartRegistry[canvasId]) {
+        chartRegistry[canvasId].destroy();
+    }
+
+    const labels = Array.from({ length: años + 1 }, (_, i) => `Año ${i}`);
+    
+    const flujoConPaneles = [-capexTotal];
+    const barrasAhorro = [0];
+    const barrasGasto = [0];
+
+    let acumulado = -capexTotal;
+    let ahorroInflacionado = ahorroAnualIntegral;
+    let gastoInflacionado = gastoNuevo;
+
+    for (let i = 1; i <= años; i++) {
+        acumulado += ahorroInflacionado;
+        flujoConPaneles.push(acumulado);
+        
+        barrasAhorro.push(ahorroInflacionado);
+        barrasGasto.push(gastoInflacionado);
+
+        ahorroInflacionado *= 1.03; // 3% de inflación anual tarifaria CFE
+        gastoInflacionado *= 1.03;
+    }
+
+    const ctx = canvas.getContext('2d');
+    chartRegistry[canvasId] = new Chart(ctx, {
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    type: 'line',
+                    label: 'Flujo de Efectivo Acumulado (ROI)',
+                    data: flujoConPaneles,
+                    borderColor: 'rgba(234, 179, 8, 1)', // Amarillo
+                    backgroundColor: 'transparent',
+                    borderWidth: 3,
+                    tension: 0.3,
+                    yAxisID: 'y', // Asignado al eje izquierdo
+                    zIndex: 10
+                },
+                {
+                    type: 'bar',
+                    label: 'Ahorro Generado (MXN)',
+                    data: barrasAhorro,
+                    backgroundColor: 'rgba(34, 197, 94, 0.7)', // Verde
+                    yAxisID: 'y1' // Asignado al eje derecho
+                },
+                {
+                    type: 'bar',
+                    label: 'Pago a CFE Restante (MXN)',
+                    data: barrasGasto,
+                    backgroundColor: 'rgba(239, 68, 68, 0.7)', // Rojo
+                    yAxisID: 'y1'
+                }
+            ]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                tooltip: { callbacks: { label: (c) => `${c.dataset.label}: $${c.parsed.y.toLocaleString('es-MX', {maximumFractionDigits:0})}` } },
+                annotation: { annotations: { line1: { type: 'line', yMin: 0, yMax: 0, borderColor: 'white', borderWidth: 1, borderDash: [5, 5] } } }
+            },
+            scales: { 
+                y: { 
+                    type: 'linear', display: true, position: 'left', 
+                    title: { display: true, text: 'Flujo Acumulado (Línea)' } 
+                },
+                y1: {
+                    type: 'linear', display: true, position: 'right', stacked: true,
+                    title: { display: true, text: 'Desglose Anual (Barras)' },
+                    grid: { drawOnChartArea: false } // Evita que se cruce la cuadrícula
+                },
+                x: { 
+                    stacked: true // Apila el gasto y el ahorro para mostrar el gasto original total visualmente
+                } 
+            }
+        }
+    });
+}

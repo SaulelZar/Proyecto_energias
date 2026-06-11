@@ -138,3 +138,66 @@ export function intervalConsumptionProfile(csvData, column = 'consumoKW') {
     }
     return profile;
 }
+
+// ============================================
+// GENERADOR DE PERFIL SINTÉTICO (Adaptado de GenReg.js)
+// Genera 35,040 registros en memoria basados en consumo mensual
+// ============================================
+export function generarPerfilSintetico(consumoMensualKWh, año = 2026) {
+    const consumoAnualDeseado = consumoMensualKWh * 12;
+    const registros = [];
+    
+    const inicio = new Date(Date.UTC(año, 0, 1, 0, 0, 0));
+    const fin = new Date(Date.UTC(año, 11, 31, 23, 45, 0));
+    
+    let actual = new Date(inicio);
+    let sumaTotalKW_Intervalo = 0;
+
+    // 1. DIBUJAR LA CURVA BASE (Con tu heurística estocástica)
+    while (actual <= fin) {
+        const mes = actual.getUTCMonth() + 1;
+        const hora = actual.getUTCHours();
+        const dia = actual.getUTCDay();
+        const minuto = actual.getUTCMinutes();
+
+        const esVerano = [6, 7, 8, 9].includes(mes);
+        const esFinSemana = (dia === 0 || dia === 6);
+
+        // Turnos
+        let factorHorario = 0.4;
+        if (hora >= 8 && hora < 18) factorHorario = 1.0;
+        else if (hora >= 18 && hora < 22) factorHorario = 0.7;
+
+        // Diferenciadores Industriales
+        if (esFinSemana) factorHorario *= 0.3;
+        if (esVerano) factorHorario *= 1.2;
+        else if ([12, 1, 2].includes(mes)) factorHorario *= 0.9;
+
+        // Ruido del 5%
+        const kwConRuido = factorHorario * (1 + (Math.random() * 0.05 - 0.025));
+
+        registros.push({
+            year: año, month: mes, day: actual.getUTCDate(),
+            hour: hora, minutes: minuto,
+            kwBruto: kwConRuido
+        });
+
+        sumaTotalKW_Intervalo += kwConRuido;
+        actual.setMinutes(actual.getMinutes() + 15);
+    }
+
+    // 2. ESCALADOR MATEMÁTICO (Ajustar a lo que pidió el usuario)
+    // Energía = Potencia * Tiempo (0.25 h por intervalo)
+    const energiaBaseAnual = sumaTotalKW_Intervalo * 0.25; 
+    const factorEscala = consumoAnualDeseado / energiaBaseAnual;
+
+    // 3. RETORNAR EL ARREGLO NORMALIZADO (Simulando que se leyó de un CSV)
+    return registros.map(r => ({
+        year: r.year,
+        month: r.month,
+        day: r.day,
+        hour: r.hour,
+        minutes: r.minutes,
+        consumoKW: r.kwBruto * factorEscala // Aplicamos el factor para cuadrar los kWh exactos
+    }));
+}

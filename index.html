@@ -38,90 +38,53 @@
         <aside class="sidebar">
             <div class="sidebar-scroll-area">
                 
-                <section class="control-card">
-                    <h2><span class="icon">📍</span> Parámetros Base</h2>
-                    
-                    <div class="input-group full-width">
-                        <label for="ciudad">Región Industrial (Tarifa CFE)</label>
-                        <select id="ciudad">
-                            <optgroup label="Zona Norte / Desierto (Tarifa GDMTH Alta)">
-                                <option value="monterrey" data-lat="25.6866" data-lon="-100.3161" selected>Monterrey, N.L.</option>
-                                <option value="saltillo" data-lat="25.4215" data-lon="-100.9731">Saltillo, Coah.</option>
-                                <option value="hermosillo" data-lat="29.0729" data-lon="-110.9559">Hermosillo, Son.</option>
-                                <option value="mexicali" data-lat="32.6278" data-lon="-115.4544">Mexicali, B.C.</option>
-                                <option value="tijuana" data-lat="32.5149" data-lon="-117.0382">Tijuana, B.C.</option>
-                                <option value="chihuahua" data-lat="28.6329" data-lon="-106.0691">Chihuahua, Chih.</option>
-                            </optgroup>
-                            <optgroup label="Zona Centro / Bajío (Templado)">
-                                <option value="cdmx" data-lat="19.4326" data-lon="-99.1332">Ciudad de México</option>
-                                <option value="queretaro" data-lat="20.5887" data-lon="-100.3899">Querétaro, Qro.</option>
-                                <option value="bajio" data-lat="21.0178" data-lon="-101.2564">León / Bajío, Gto.</option>
-                                <option value="aguascalientes" data-lat="21.8818" data-lon="-102.2915">Aguascalientes, Ags.</option>
-                                <option value="puebla" data-lat="19.0414" data-lon="-98.2062">Puebla, Pue.</option>
-                            </optgroup>
-                            <optgroup label="Zona Occidente / Pacífico">
-                                <option value="guadalajara" data-lat="20.6597" data-lon="-103.3500">Guadalajara, Jal.</option>
-                                <option value="vallarta" data-lat="20.6534" data-lon="-105.2253">Puerto Vallarta, Jal.</option>
-                                <option value="culiacan" data-lat="24.8016" data-lon="-107.3916">Culiacán, Sin.</option>
-                            </optgroup>
-                            <optgroup label="Zona Sur / Golfo / Península">
-                                <option value="merida" data-lat="20.9674" data-lon="-89.6237">Mérida, Yuc.</option>
-                                <option value="cancun" data-lat="21.1619" data-lon="-86.8515">Cancún, Q.Roo</option>
-                                <option value="veracruz" data-lat="19.1738" data-lon="-96.1342">Veracruz, Ver.</option>
-                                <option value="villahermosa" data-lat="17.9895" data-lon="-92.9281">Villahermosa, Tab.</option>
-                            </optgroup>
-                            <optgroup label="Global">
-                                <option value="custom">Personalizado / Otra ubicación</option>
-                            </optgroup>
-                        </select>
-                    </div>
-
-                    <div class="input-group full-width mt-2">
-                        <label for="climaEspecifico">Condición Meteorológica</label>
-                        <select id="climaEspecifico">
-                            <option value="normal" selected>TMY (Año Típico Estándar)</option>
-                            <option value="despejado">Cielo Despejado (Ideal)</option>
-                            <option value="nublado">Nublado Crítico (P90)</option>
-                            <option value="ola_calor">Ola de Calor (Estrés Térmico)</option>
-                        </select>
-                    </div>
-
-                    <div class="input-grid mt-2">
-                        <div class="input-group">
-                            <label for="estacion">Estación</label>
-                            <select id="estacion">
-                                <option value="primavera">Primavera</option>
-                                <option value="verano" selected>Verano</option>
-                                <option value="otono">Otoño</option>
-                                <option value="invierno">Invierno</option>
-                            </select>
-                        </div>
-                        <div class="input-group">
-                            <label for="tipoDia">Día Operativo</label>
-                            <select id="tipoDia">
-                                <option value="semana" selected>Hábil</option>
-                                <option value="fin_semana">Fin Semana</option>
-                            </select>
-                        </div>
-                        <div class="input-group full-width">
-                            <label for="diaEspecifico">Evaluación Forense (Día Exacto):</label>
-                            <input type="date" id="diaEspecifico" min="2026-01-01" max="2026-12-31">
-                        </div>
-                    </div>
-
-                    <div class="upload-container">
-                        <label for="csvFile" class="upload-btn">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                            Subir Perfil de Demanda (CSV)
-                        </label>
-                        <input type="file" id="csvFile" accept=".csv" hidden>
-                    </div>
-                </section>
-
-                <details class="control-card modular-panel">
-                    <summary class="panel-summary title-blue">⚙️ Ingeniería de Detalle (PV & BESS)</summary>
-                    
+                <details class="control-card modular-panel" id="panel1" open>
+                    <summary class="panel-summary title-blue">1. Parámetros Base y Clima</summary>
                     <div class="panel-content">
+                        <div class="input-group full-width">
+                            <label for="ciudad">Región Industrial (Tarifa CFE)</label>
+                            <select id="ciudad">
+                                <optgroup label="Zona Norte / Desierto (Tarifa GDMTH Alta)">
+                                    <option value="monterrey" data-lat="25.6866" data-lon="-100.3161" selected>Monterrey, N.L.</option>
+                                    <option value="saltillo" data-lat="25.4215" data-lon="-100.9731">Saltillo, Coah.</option>
+                                    <option value="hermosillo" data-lat="29.0729" data-lon="-110.9559">Hermosillo, Son.</option>
+                                    <option value="mexicali" data-lat="32.6278" data-lon="-115.4544">Mexicali, B.C.</option>
+                                    <option value="tijuana" data-lat="32.5149" data-lon="-117.0382">Tijuana, B.C.</option>
+                                    <option value="chihuahua" data-lat="28.6329" data-lon="-106.0691">Chihuahua, Chih.</option>
+                                </optgroup>
+                                <optgroup label="Zona Centro / Bajío (Templado)">
+                                    <option value="cdmx" data-lat="19.4326" data-lon="-99.1332">Ciudad de México</option>
+                                    <option value="queretaro" data-lat="20.5887" data-lon="-100.3899">Querétaro, Qro.</option>
+                                    <option value="bajio" data-lat="21.0178" data-lon="-101.2564">León / Bajío, Gto.</option>
+                                    <option value="aguascalientes" data-lat="21.8818" data-lon="-102.2915">Aguascalientes, Ags.</option>
+                                    <option value="puebla" data-lat="19.0414" data-lon="-98.2062">Puebla, Pue.</option>
+                                </optgroup>
+                                <optgroup label="Zona Occidente / Pacífico">
+                                    <option value="guadalajara" data-lat="20.6597" data-lon="-103.3500">Guadalajara, Jal.</option>
+                                    <option value="vallarta" data-lat="20.6534" data-lon="-105.2253">Puerto Vallarta, Jal.</option>
+                                    <option value="culiacan" data-lat="24.8016" data-lon="-107.3916">Culiacán, Sin.</option>
+                                </optgroup>
+                                <optgroup label="Zona Sur / Golfo / Península">
+                                    <option value="merida" data-lat="20.9674" data-lon="-89.6237">Mérida, Yuc.</option>
+                                    <option value="cancun" data-lat="21.1619" data-lon="-86.8515">Cancún, Q.Roo</option>
+                                    <option value="veracruz" data-lat="19.1738" data-lon="-96.1342">Veracruz, Ver.</option>
+                                    <option value="villahermosa" data-lat="17.9895" data-lon="-92.9281">Villahermosa, Tab.</option>
+                                </optgroup>
+                                <optgroup label="Global">
+                                    <option value="custom">Personalizado / Otra ubicación</option>
+                                </optgroup>
+                            </select>
+                        </div>
+
+                        <div class="input-group full-width mt-2">
+                            <label for="climaEspecifico">Condición Meteorológica</label>
+                            <select id="climaEspecifico">
+                                <option value="normal" selected>TMY (Año Típico Estándar)</option>
+                                <option value="despejado">Cielo Despejado (Ideal)</option>
+                                <option value="nublado">Nublado Crítico (P90)</option>
+                                <option value="ola_calor">Ola de Calor (Estrés Térmico)</option>
+                            </select>
+                        </div>
                         <div class="input-grid mt-2">
                             <div class="input-group">
                                 <label for="latitud">Latitud</label>
@@ -131,17 +94,38 @@
                                 <label for="longitud">Longitud</label>
                                 <input type="number" step="any" id="longitud" value="-100.3161">
                             </div>
-                            <div class="input-group full-width">
-                                <label for="altitud">Altitud (msnm)</label>
-                                <input type="number" step="any" id="altitud" value="540">
+                        </div>
+                        <button type="button" class="btn-step mt-4" data-target="panel2">Confirmar Ubicación ➔</button>
+                    </div>
+                </details>
+
+                <details class="control-card modular-panel locked-panel" id="panel2">
+                    <summary class="panel-summary title-green">2. Ingeniería PV y Demanda</summary>
+                    <div class="panel-content">
+                        <div class="input-group full-width mb-2">
+                            <label>Origen de la Demanda Eléctrica</label>
+                            <div style="display: flex; gap: 15px; margin-top: 8px; font-size: 0.85rem; color: var(--text-title);">
+                                <label style="cursor: pointer; display: flex; align-items: center; gap: 5px;">
+                                    <input type="radio" name="fuenteDemanda" value="sintetico" checked> Recibo Mensual (Express)
+                                </label>
+                                <label style="cursor: pointer; display: flex; align-items: center; gap: 5px;">
+                                    <input type="radio" name="fuenteDemanda" value="csv"> Histórico Detallado (CSV)
+                                </label>
                             </div>
                         </div>
+                        <div id="containerSintetico" class="input-group full-width mb-3">
+                            <label for="consumoMensualEstimado">Consumo Promedio (kWh / mes)</label>
+                            <input type="number" step="1000" id="consumoMensualEstimado" value="30000">
+                            <p style="font-size: 0.65rem; color: var(--text-light); margin-top: 5px;">*El motor generará una curva industrial estocástica de 35,040 puntos basada en este volumen.</p>
+                        </div>
 
-                        <hr class="divider">
-
+                        <div id="containerCSV" class="upload-container mb-3 hidden">
+                            <label for="csvFile" class="upload-btn">Subir Archivo de Intervalos (.csv)</label>
+                            <input type="file" id="csvFile" accept=".csv" hidden>
+                        </div>
                         <div class="input-grid mt-2">
                             <div class="input-group">
-                                <label for="area">Área (m²)</label>
+                                <label for="area">Área FV (m²)</label>
                                 <input type="number" step="0.1" id="area" value="1000">
                             </div>
                             <div class="input-group">
@@ -150,7 +134,7 @@
                             </div>
                             <div class="input-group">
                                 <label for="inclinacion">Inclinación (°)</label>
-                                <input type="number" step="0.1" id="inclinacion" value="25" min="5" max="60">
+                                <input type="number" step="0.1" id="inclinacion" value="25">
                             </div>
                             <div class="input-group">
                                 <label for="azimut">Azimut (°)</label>
@@ -159,32 +143,45 @@
                             <div class="input-group full-width">
                                 <label for="tracking">Seguimiento Cinemático</label>
                                 <select id="tracking">
-                                    <option value="fixed" selected>Montaje Fijo Estándar</option>
-                                    <option value="single">Tracker 1 Eje (Este-Oeste)</option>
+                                    <option value="fixed" selected>Fijo Estándar</option>
+                                    <option value="single">Tracker 1 Eje</option>
                                     <option value="dual">Tracker 2 Ejes</option>
                                 </select>
                             </div>
-                            <div class="input-group">
-                                <label for="bifacial">Bifacial (%)</label>
-                                <input type="number" step="1" id="bifacial" value="0" min="0" max="100">
-                            </div>
-                            <div class="input-group">
-                                <label for="inversorAC">Límite AC (kW)</label>
+                            <div class="input-group full-width mt-2">
+                                <label for="inversorAC">Límite AC del Inversor (kW)</label>
                                 <input type="number" step="10" id="inversorAC" value="1000"> 
                             </div>
                             <div class="input-group full-width mt-2">
-                                <label for="enfriamiento">Sistema de Enfriamiento Térmico</label>
+                                <label for="enfriamiento">Sistema de Enfriamiento</label>
                                 <select id="enfriamiento">
                                     <option value="none" selected>Ninguno (Convección Natural)</option>
-                                    <option value="passive">Disipadores Pasivos (Aletas traseras / 0 W)</option>
-                                    <option value="active_air">Ventilación Forzada (~5 W/m²)</option>
-                                    <option value="active_water">Irrigación por Agua (~12 W/m²)</option>
+                                    <option value="passive">Disipadores pasivos de aletas</option>
+                                    <option value="active_air">Ventilación Forzada</option>
+                                    <option value="active_water">Irrigación por Agua</option>
                                 </select>
                             </div>
                         </div>
+                        <button type="button" class="btn-step mt-4" data-target="panel3">Confirmar Planta Solar ➔</button>
+                    </div>
+                </details>
 
-                        <hr class="divider">
-
+                <details class="control-card modular-panel locked-panel" id="panel3">
+                    <summary class="panel-summary title-purple">3. BESS y Resiliencia</summary>
+                    <div class="panel-content">
+                        <div style="background: rgba(132, 204, 22, 0.1); border: 1px solid var(--accent); padding: 10px; border-radius: 4px; margin-bottom: 15px;">
+                            <p style="font-size: 0.75rem; color: var(--text-main); margin-bottom: 8px;"><b>Calculadora de Continuidad Operativa</b></p>
+                            <div class="input-grid">
+                                <div class="input-group">
+                                    <label for="cargaCritica">Carga Crítica (kW)</label>
+                                    <input type="number" step="1" id="cargaCritica" value="0">
+                                </div>
+                                <div class="input-group">
+                                    <label for="horasRespaldo">Respaldo (Hrs)</label>
+                                    <input type="number" step="1" id="horasRespaldo" value="0">
+                                </div>
+                            </div>
+                        </div>
                         <div class="input-grid mt-2">
                             <div class="input-group">
                                 <label for="capacidadBateria">Capacidad (kWh)</label>
@@ -192,65 +189,100 @@
                             </div>
                             <div class="input-group">
                                 <label for="socInicial">SOC Inicial (%)</label>
-                                <input type="number" step="1" id="socInicial" value="50" min="0" max="100">
+                                <input type="number" step="1" id="socInicial" value="50">
                             </div>
                             <div class="input-group">
                                 <label for="reservaRespaldo">Reserva UPS (%)</label>
-                                <input type="number" step="1" id="reservaRespaldo" value="30" min="0" max="100">
+                                <input type="number" step="1" id="reservaRespaldo" value="30">
                             </div>
                             <div class="input-group">
-                                <label for="fallaRed">Estabilidad CFE (%)</label>
-                                <input type="number" step="0.1" id="fallaRed" value="99.5" min="0" max="100">
+                                <label for="fallaRed">Estabilidad Red CFE (%)</label>
+                                <input type="number" step="0.1" id="fallaRed" value="99.5">
                             </div>
                         </div>
+                        <button type="button" class="btn-step mt-4" data-target="panel4">Confirmar Almacenamiento ➔</button>
                     </div>
                 </details>
 
-                <details class="control-card modular-panel">
-                    <summary class="panel-summary title-green">💰 Estrategia y Presupuesto</summary>
-                    
+                <details class="control-card modular-panel locked-panel" id="panel4">
+                    <summary class="panel-summary title-orange">4. Finanzas y Continuidad</summary>
                     <div class="panel-content">
-                        <div class="input-group full-width mt-2">
-                            <label for="modoAutoSizing">Objetivo del Diseño</label>
+                        <div class="input-group full-width mt-2 mb-3">
+                            <label for="modoAutoSizing">Objetivo de Autodimensionamiento</label>
                             <select id="modoAutoSizing">
-                                <option value="net_zero" selected>Net Zero (Balance CFE Anual, Batería UPS)</option>
-                                <option value="off_grid">Autarquía (100% Cobertura Solar, Cero CFE)</option>
-                                <option value="fixed_area">Resiliencia (Área Fija, Batería UPS Crítica)</option>
+                                <option value="net_zero" selected>Net Zero (Balance CFE Anual + Peak Shaving)</option>
+                                <option value="fixed_area">Resiliencia Industrial (Maximizando el BESS)</option>
+                                <option value="off_grid">Autarquía (100% Cobertura - No recomendado)</option>
                             </select>
                         </div>
-
+                        <div class="input-group full-width mt-2">
+                            <label for="tipoCostoApagon">¿Cómo mides las pérdidas por apagón?</label>
+                            <select id="tipoCostoApagon">
+                                <option value="hora" selected>Por Hora de paro (Producción perdida)</option>
+                                <option value="evento">Por Evento (Daño a equipos/Reinicio)</option>
+                            </select>
+                        </div>
+                        <div class="input-group full-width mt-2">
+                            <label for="costoApagon">Monto de la Pérdida (MXN)</label>
+                            <input type="number" step="1000" id="costoApagon" value="5000">
+                        </div>
+                        
+                        <hr class="divider">
+                        
                         <div class="input-grid mt-2">
                             <div class="input-group">
                                 <label for="costoPanelWp">Módulos (MXN/Wp)</label>
                                 <input type="number" step="0.50" id="costoPanelWp" value="6.00">
                             </div>
                             <div class="input-group">
-                                <label for="costoBateriaKWh">Batería (MXN/kWh)</label>
-                                <input type="number" step="100" id="costoBateriaKWh" value="7000">
-                            </div>
-                            <div class="input-group full-width">
                                 <label for="costoInversorKW">Inversores (MXN/kW)</label>
                                 <input type="number" step="100" id="costoInversorKW" value="2000">
                             </div>
+                            <div class="input-group full-width">
+                                <label for="costoBateriaKWh">Batería (MXN/kWh)</label>
+                                <input type="number" step="100" id="costoBateriaKWh" value="7000">
+                            </div>
                         </div>
+
+                        <div class="input-group full-width mt-2">
+                            <label for="tipoTarifa">Estructura Tarifaria CFE</label>
+                            <select id="tipoTarifa">
+                                <optgroup label="Sector Industrial / Comercial">
+                                    <option value="gdmth" selected>GDMTH (Horaria - 3 Escalones)</option>
+                                    <option value="gdmto">GDMTO (Ordinaria - Tarifa Única)</option>
+                                </optgroup>
+                                <optgroup label="Sector Residencial (Bloques Bimestrales)">
+                                    <option value="1A">Tarifa 1A (Límite DAC: 350 kWh)</option>
+                                    <option value="1B">Tarifa 1B (Límite DAC: 800 kWh)</option>
+                                    <option value="1C">Tarifa 1C (Límite DAC: 1,700 kWh)</option>
+                                    <option value="1D">Tarifa 1D (Límite DAC: 2,000 kWh)</option>
+                                    <option value="1E">Tarifa 1E (Límite DAC: 5,000 kWh)</option>
+                                    <option value="1F">Tarifa 1F (Límite DAC: 5,000 kWh)</option>
+                                </optgroup>
+                            </select>
+                        </div>
+
+                        <div class="express-module mt-3 mb-3" style="background: rgba(0,0,0,0.2); padding: 10px; border-radius: 4px; border-left: 3px solid var(--accent);">
+                            <label style="display: flex; align-items: center; gap: 8px; font-size: 0.8rem; cursor: pointer;">
+                                <input type="checkbox" id="checkExpress"> Sobreescribir con Costo Promedio (Módulo Express)
+                            </label>
+                            <div id="costoExpressContainer" class="input-group mt-2 hidden">
+                                <label for="costoKWhExpress">Costo Fijo Acordado (MXN/kWh)</label>
+                                <input type="number" step="0.1" id="costoKWhExpress" value="2.5">
+                            </div>
+                        </div>
+
+                        <p style="font-size: 0.65rem; color: var(--text-light); text-align: center; margin-top: 15px; font-style: italic;">*Nota: Las simulaciones financieras son aproximaciones basadas en CAPEX estándar de la industria (BOS 15%). Los costos reales de una instalación llave en mano (EPC) pueden variar.</p>
                     </div>
                 </details>
 
                 <button id="btnAutoSizing" class="btn-auto-sizing mt-4">
-                    <svg class="svg-icon" height="20" width="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
-                        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>
-                    </svg>
-                    Auto-Dimensionar Sistema Mínimo Viable
+                    Dimensionamiento Automático
                 </button>
-                
-                <div id="statusMessage"></div>
             </div>
 
             <div class="sidebar-footer">
-                <button id="calcularBtn">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-                    Ejecutar Simulación
-                </button>
+                <button id="calcularBtn">Ejecutar Simulación Integral</button>
             </div>
         </aside>
 
@@ -314,13 +346,13 @@
                     </div>
                 </div>
                 <div class="card kpi-card">
-                    <div class="kpi-icon blue">📉</div>
+                    <div class="kpi-icon purple">⏱️</div>
                     <div>
-                        <h3>Nuevo Recibo CFE</h3>
-                        <p id="kpiGastoNuevo">$0</p>
+                        <h3>Retorno de Inversión (ROI)</h3>
+                        <p id="kpiROI">0 <span>Años</span></p>
                     </div>
                 </div>
-                <div class="card kpi-card">
+                <div class="card kpi-card span-2">
                     <div class="kpi-icon green">💵</div>
                     <div>
                         <h3>Ahorro Anual (Bruto)</h3>
@@ -328,77 +360,103 @@
                     </div>
                 </div>
                 <div class="card kpi-card">
-                    <div class="kpi-icon purple">⏱️</div>
+                    <div class="kpi-icon blue">📉</div>
                     <div>
-                        <h3>Retorno de Inversión (ROI)</h3>
-                        <p id="kpiROI">0 <span>Años</span></p>
+                        <h3>Nuevo Recibo CFE</h3>
+                        <p id="kpiGastoNuevo">$0</p>
                     </div>
                 </div>
+                
             </section>
 
-            <!-- 🟢 CONTROLES DE ESCALA TEMPORAL (CON CLASES ASIGNADAS) -->
-            <div class="time-scale-controls">
-                <label class="time-scale-label">Resolución de Gráficas:</label>
+            <div style="display: flex; flex-direction: column; gap: 1.5rem; margin-bottom: 2rem;">
                 
-                <select id="escalaTiempo" class="time-scale-select">
-                    <option value="dia" selected>Día Específico (Flujo en kW)</option>
-                    <option value="mes">Mes Específico (Volumen en kWh)</option>
-                    <option value="ano">Año Completo (Acumulado Mensual en kWh)</option>
-                </select>
-
-                <select id="mesSelector" class="time-scale-select hidden">
-                    <option value="0">Enero</option>
-                    <option value="1">Febrero</option>
-                    <option value="2">Marzo</option>
-                    <option value="3">Abril</option>
-                    <option value="4">Mayo</option>
-                    <option value="5">Junio</option>
-                    <option value="6">Julio</option>
-                    <option value="7">Agosto</option>
-                    <option value="8">Septiembre</option>
-                    <option value="9">Octubre</option>
-                    <option value="10">Noviembre</option>
-                    <option value="11">Diciembre</option>
-                </select>
-            </div>
-
-            <div class="charts-grid">
-                <section class="chart-container span-2">
-                    <div class="chart-header">
-                        <h2>Balance Energético de Potencia</h2>
-                        <span class="badge">Resolución: 15 min</span>
-                    </div>
-                    <div class="canvas-wrapper">
-                        <canvas id="powerChart"></canvas>
-                    </div>
-                </section>
-
-                <section class="chart-container span-2">
-                    <div class="chart-header">
-                        <h2>Comparativa: Demanda Original vs. Demanda con Inyección Solar</h2>
-                        <span class="badge">Peak Shaving (Reducción de Picos)</span>
-                    </div>
-                    <div class="canvas-wrapper">
-                        <canvas id="netLoadChart"></canvas>
-                    </div>
-                </section>
-                
-                <section class="chart-container span-2">
-                    <div class="chart-header">
-                        <h2>Balance Energético Anual CFE</h2>
-                        <span class="badge">Resolución: Mensual (Facturación)</span>
-                    </div>
-                    <div class="canvas-wrapper" style="min-height: 300px;">
-                        <canvas id="cfeMonthlyChart"></canvas>
-                    </div>
-                </section>
-                
-                <details class="span-2 advanced-charts-panel">
+                <details class="advanced-charts-panel" open>
                     <summary class="chart-summary-toggle">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px; vertical-align: middle;"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
-                        Ver Análisis Termodinámico y de Almacenamiento
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px; vertical-align: middle;"><path d="M2 20h.01"></path><path d="M7 20v-4"></path><path d="M12 20v-8"></path><path d="M17 20V8"></path><path d="M22 4v16"></path></svg>
+                        1. Análisis Operativo (Demanda vs Generación)
                     </summary>
                     
+                    <div class="time-scale-controls" style="margin-top: 15px; margin-bottom: 5px; display: flex; justify-content: flex-start;">
+                        <label class="time-scale-label" style="margin-right: 10px; align-self: center;">Resolución de Gráficas:</label>
+                        <select id="escalaTiempo" class="time-scale-select" style="margin-right: 10px;">
+                            <option value="dia" selected>Día Específico (Flujo en kW)</option>
+                            <option value="mes">Mes Específico (Volumen en kWh)</option>
+                            <option value="ano">Año Completo (Acumulado Mensual en kWh)</option>
+                        </select>
+
+                        <select id="mesSelector" class="time-scale-select hidden">
+                            <option value="0">Enero</option>
+                            <option value="1">Febrero</option>
+                            <option value="2">Marzo</option>
+                            <option value="3">Abril</option>
+                            <option value="4">Mayo</option>
+                            <option value="5">Junio</option>
+                            <option value="6">Julio</option>
+                            <option value="7">Agosto</option>
+                            <option value="8">Septiembre</option>
+                            <option value="9">Octubre</option>
+                            <option value="10">Noviembre</option>
+                            <option value="11">Diciembre</option>
+                        </select>
+                    </div>
+
+                    <div class="charts-grid mt-4">
+                        <section class="chart-container span-2">
+                            <div class="chart-header">
+                                <h2>Balance Energético de Potencia</h2>
+                                <span class="badge">Resolución Dinámica</span>
+                            </div>
+                            <div class="canvas-wrapper">
+                                <canvas id="powerChart"></canvas>
+                            </div>
+                        </section>
+
+                        <section class="chart-container span-2">
+                            <div class="chart-header">
+                                <h2>Comparativa: Demanda Original vs. Demanda con Inyección Solar</h2>
+                                <span class="badge">Peak Shaving (Reducción de Picos)</span>
+                            </div>
+                            <div class="canvas-wrapper">
+                                <canvas id="netLoadChart"></canvas>
+                            </div>
+                        </section>
+                    </div>
+                </details>
+
+                <details class="advanced-charts-panel" open>
+                    <summary class="chart-summary-toggle">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px; vertical-align: middle;"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                        2. Impacto Financiero y Retorno de Inversión
+                    </summary>
+                    <div class="charts-grid mt-4">
+                        <section class="chart-container span-2">
+                            <div class="chart-header">
+                                <h2>Balance Energético Anual CFE</h2>
+                                <span class="badge">Resolución: {Meses}</span>
+                            </div>
+                            <div class="canvas-wrapper" style="min-height: 300px;">
+                                <canvas id="cfeMonthlyChart"></canvas>
+                            </div>
+                        </section>
+                        
+                        <section class="chart-container span-2">
+                            <div class="chart-header">
+                                <h2>Flujo de Efectivo a 10 Años (ROI)</h2>
+                                <span class="badge" id="roiBadge">Punto de Equilibrio</span>
+                            </div>
+                            <div class="canvas-wrapper">
+                                <canvas id="cashflowChart"></canvas>
+                            </div>
+                        </section>
+                    </div>
+                </details>
+
+                <details class="advanced-charts-panel">
+                    <summary class="chart-summary-toggle">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px; vertical-align: middle;"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                        3. Análisis Termodinámico y de Almacenamiento
+                    </summary>
                     <div class="charts-grid mt-4">
                         <section class="chart-container">
                             <div class="chart-header">

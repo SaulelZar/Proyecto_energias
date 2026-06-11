@@ -46,6 +46,7 @@ export function simulateYear({
     let currentBlackoutIntervals = 0;
     let maxBlackoutIntervals = 0;
     let isCurrentlyInBlackout = false;
+    let totalBlackoutIntervals = 0; // 🟢 NUEVO: Contador absoluto de apagones
 
     // ========================================
     // 🟢 FIX 1 y 2: OPTIMIZACIÓN O(1) Y TIMEZONES
@@ -78,7 +79,7 @@ export function simulateYear({
             const index = (hour * 4) + Math.floor(minutes / 15);
 
             // Extraemos la potencia (soporta el output de GenReg o de la UI)
-            const powerKW = Number(c.kw) || Number(c.Demanda_kW) || 0;
+            const powerKW = Number(c.consumoKW) || Number(c.kw) || Number(c.Demanda_kW) || 0;
             
             consumptionMap.get(dateKey)[index] = powerKW;
         }
@@ -154,6 +155,7 @@ export function simulateYear({
             annualGridExport += e.gridExport || 0;
 
             if (e.unmetLoad > 0.001) {
+                totalBlackoutIntervals++; // 🟢 NUEVO: Suma cada intervalo de 15 min sin luz
                 if (!isCurrentlyInBlackout) {
                     isCurrentlyInBlackout = true;
                     totalBlackoutEvents++; // Inicia un nuevo evento
@@ -213,6 +215,7 @@ export function simulateYear({
         dailyResults,
         annualResults,
         totalBlackoutEvents,
-        maxBlackoutDurationHours: maxBlackoutIntervals * 0.25
+        maxBlackoutDurationHours: maxBlackoutIntervals * 0.25,
+        totalBlackoutHours: totalBlackoutIntervals * 0.25 // 🟢 NUEVO
     };
 }

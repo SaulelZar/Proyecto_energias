@@ -1,122 +1,166 @@
 // ============================================
-// MOTOR FINANCIERO CFE (GDMTH / GDMTO) 
-// Módulo independiente de facturación en MXN
+// cfe.js
+// MOTOR FINANCIERO DUAL (Industrial + Residencial Escalonado)
 // ============================================
 
-const TARIFAS_CFE = {
-    gdmth: {
-        energia: { base: 1.25, intermedia: 2.10, punta: 3.80 }, // MXN / kWh
-        demanda: { capacidad: 385.00, distribucion: 130.00 }    // MXN / kW
-    },
-    gdmto: {
-        energia: { unica: 1.95 },                               // MXN / kWh
-        demanda: { capacidad: 320.00, distribucion: 130.00 }    // MXN / kW
+export function calcularAhorroCFE(simulacionAnual, config) {
+    const tarifa = config?.tipoTarifa || 'gdmth';
+
+    if (tarifa.startsWith('1')) {
+        return calcularResidencial(simulacionAnual, tarifa);
+    } else {
+        return calcularIndustrial(simulacionAnual, tarifa);
     }
-};
-
-function obtenerPeriodoCFE(fecha) {
-    const hora = fecha.getHours();
-    const dia = fecha.getDay(); 
-
-    if (dia === 0 || dia === 6) {
-        if (hora >= 0 && hora < 6) return 'base';
-        return 'intermedia';
-    }
-
-    if (hora >= 0 && hora < 6) return 'base';
-    if (hora >= 20 && hora < 22) return 'punta';
-    return 'intermedia';
 }
 
-export function calcularAhorroCFE(simulacionAnual) {
-    let costoSinSolar = 0;
-    let costoConSolar = 0;
-
-    let energiaMensualSin = { base: 0, intermedia: 0, punta: 0 };
-    let energiaMensualCon = { base: 0, intermedia: 0, punta: 0 };
+// ============================================
+// LÓGICA 1: TARIFAS RESIDENCIALES (Bimestrales Escalonadas + DAC)
+// ============================================
+function calcularResidencial(simulacionAnual, tipoTarifa) {
+    // Límites de bloques de energía definidos por CFE
+    const LIMITES = {
+        '1A': { basico: 150, intermedio: 150, dac: 350 },
+        '1B': { basico: 150, intermedio: 250, dac: 800 },
+        '1C': { basico: 150, intermedio: 250, dac: 1700 },
+        '1D': { basico: 150, intermedio: 250, dac: 2000 },
+        '1E': { basico: 150, intermedio: 350, dac: 5000 },
+        '1F': { basico: 150, intermedio: 450, dac: 5000 }
+    };
     
-    let maxDemandaSin = 0;
-    let maxDemandaCon = 0;
-    let maxDemandaPuntaCon = 0;
+    // Precios paramétricos estimados (MXN/kWh)
+    const PRECIOS = { basico: 1.05, intermedio: 1.30, excedente: 3.65, dac: 5.80 };
+    const bloque = LIMITES[tipoTarifa];
 
-    const tarifa = TARIFAS_CFE.gdmth; 
-    
-    if (!simulacionAnual || !simulacionAnual.dailyResults || simulacionAnual.dailyResults.length === 0) {
-        return { gastoOriginal: 0, gastoNuevo: 0, ahorroAnual: 0 };
-    }
+    // Condición DAC (Alto Consumo): Se evalúa si el promedio mensual supera el límite
+    const promMensualSin = simulacionAnual.annualConsumptionEnergy / 12;
+    const promMensualCon = simulacionAnual.annualGridImport / 12;
+    const esDAC_Sin = promMensualSin > bloque.dac;
+    const esDAC_Con = promMensualCon > bloque.dac;
 
-    const diasTotales = simulacionAnual.dailyResults.length;
-    let mesActual = 0; 
+    // Agrupación en 6 Bimestres (Regla residencial)
+    let bimestresSin = new Array(6).fill(0);
+    let bimestresCon = new Array(6).fill(0);
 
-    simulacionAnual.dailyResults.forEach((diaData, diaIndex) => {
-        if (!diaData.energySystem || !diaData.energySystem.intervals) return;
+    simulacionAnual.dailyResults.forEach(day => {
+        const mes = day.date.getMonth(); // 0-11
+        const bimestreIdx = Math.floor(mes / 2); // 0-5
 
-        const intervalosDelDia = diaData.energySystem.intervals;
-        const totalIntervalosDia = intervalosDelDia.length;
-
-        intervalosDelDia.forEach((intervalo, intIndex) => {
-            
-            let fecha = intervalo.timestamp ? new Date(intervalo.timestamp) : null;
-            if (!fecha || isNaN(fecha.getTime())) {
-                fecha = new Date(2026, 0, 1); 
-                fecha.setMinutes((diaIndex * 24 * 60) + (intIndex * 15)); 
-            }
-
-            const mes = fecha.getMonth();
-            const periodo = obtenerPeriodoCFE(fecha);
-            const esUltimoIntervalo = (diaIndex === diasTotales - 1) && (intIndex === totalIntervalosDia - 1);
-
-            if (diaIndex === 0 && intIndex === 0) mesActual = mes;
-
-            if (mes !== mesActual || esUltimoIntervalo) {
-                const costoEnergiaSin = 
-                    (energiaMensualSin.base * tarifa.energia.base) + 
-                    (energiaMensualSin.intermedia * tarifa.energia.intermedia) + 
-                    (energiaMensualSin.punta * tarifa.energia.punta);
-
-                const costoEnergiaCon = 
-                    (energiaMensualCon.base * tarifa.energia.base) + 
-                    (energiaMensualCon.intermedia * tarifa.energia.intermedia) + 
-                    (energiaMensualCon.punta * tarifa.energia.punta);
-
-                const costoDemandaSin = (maxDemandaSin * tarifa.demanda.distribucion) + (maxDemandaSin * tarifa.demanda.capacidad);
-                const costoDemandaCon = (maxDemandaCon * tarifa.demanda.distribucion) + (maxDemandaPuntaCon * tarifa.demanda.capacidad);
-
-                costoSinSolar += (costoEnergiaSin + costoDemandaSin);
-                costoConSolar += (costoEnergiaCon + costoDemandaCon);
-
-                energiaMensualSin = { base: 0, intermedia: 0, punta: 0 };
-                energiaMensualCon = { base: 0, intermedia: 0, punta: 0 };
-                maxDemandaSin = 0;
-                maxDemandaCon = 0;
-                maxDemandaPuntaCon = 0;
-                mesActual = mes;
-            }
-
-            // 🟢 TRADUCTOR TERMODINÁMICO EXACTO (kWh a kW)
-            // Extraemos la energía (kWh) proveniente de energySystem.js
-            const consumokWh = Number(intervalo.consumption) || 0;
-            let compraCFE_kWh = Number(intervalo.gridImport) || 0;
-            
-            if (compraCFE_kWh < 0) compraCFE_kWh = 0; 
-
-            // Transformamos a Potencia (kW) para evaluar los picos de demanda
-            const consumokW = consumokWh * 4;
-            const compraCFE_kW = compraCFE_kWh * 4;
-
-            // Acumuladores
-            energiaMensualSin[periodo] += consumokWh;
-            energiaMensualCon[periodo] += compraCFE_kWh;
-
-            if (consumokW > maxDemandaSin) maxDemandaSin = consumokW;
-            if (compraCFE_kW > maxDemandaCon) maxDemandaCon = compraCFE_kW;
-            if (periodo === 'punta' && compraCFE_kW > maxDemandaPuntaCon) maxDemandaPuntaCon = compraCFE_kW;
+        day.energySystem.intervals.forEach(int => {
+            bimestresSin[bimestreIdx] += int.consumption || 0;
+            bimestresCon[bimestreIdx] += Math.max(0, int.gridImport || 0);
         });
     });
 
-    return {
-        gastoOriginal: costoSinSolar,
-        gastoNuevo: costoConSolar,
-        ahorroAnual: costoSinSolar - costoConSolar
+    // Procesamiento en Cascada
+    const calcularCobroBimestre = (consumo, esDAC) => {
+        if (esDAC) return consumo * PRECIOS.dac; // Castigo directo sin escalones
+        
+        let costo = 0;
+        let restante = consumo;
+
+        let cobroBasico = Math.min(restante, bloque.basico);
+        costo += cobroBasico * PRECIOS.basico;
+        restante -= cobroBasico;
+
+        if (restante > 0) {
+            let cobroIntermedio = Math.min(restante, bloque.intermedio);
+            costo += cobroIntermedio * PRECIOS.intermedio;
+            restante -= cobroIntermedio;
+        }
+
+        if (restante > 0) {
+            costo += restante * PRECIOS.excedente; // Excedente sin subsidio
+        }
+        return costo;
     };
+
+    let costoAnualSin = 0;
+    let costoAnualCon = 0;
+
+    for (let i = 0; i < 6; i++) {
+        costoAnualSin += calcularCobroBimestre(bimestresSin[i], esDAC_Sin);
+        costoAnualCon += calcularCobroBimestre(bimestresCon[i], esDAC_Con);
+    }
+
+    return { gastoOriginal: costoAnualSin, gastoNuevo: costoAnualCon, ahorroAnual: costoAnualSin - costoAnualCon };
+}
+
+// ============================================
+// LÓGICA 2: TARIFAS INDUSTRIALES (GDMTH / GDMTO)
+// ============================================
+function calcularIndustrial(simulacionAnual, tipoTarifa) {
+    const TARIFAS_IND = {
+        gdmth: {
+            energia: { base: 1.25, intermedia: 2.10, punta: 3.80 },
+            demanda: { capacidad: 385.00, distribucion: 130.00 }
+        },
+        gdmto: { // Datos recibo Streger May 2026
+            energia: { unica: 2.05 },
+            demanda: { capacidad: 320.00, distribucion: 130.00 }
+        }
+    };
+    const t = TARIFAS_IND[tipoTarifa];
+
+    let costoAnualSin = 0;
+    let costoAnualCon = 0;
+
+    // Agrupación de Demanda Mensual
+    let maxDemandaMensualSin = new Array(12).fill(0);
+    let maxDemandaMensualCon = new Array(12).fill(0);
+    let energiaMensualSin = Array.from({ length: 12 }, () => ({ base: 0, int: 0, punta: 0 }));
+    let energiaMensualCon = Array.from({ length: 12 }, () => ({ base: 0, int: 0, punta: 0 }));
+
+    simulacionAnual.dailyResults.forEach(day => {
+        const mes = day.date.getMonth();
+        const diaSemana = day.date.getDay();
+
+        day.energySystem.intervals.forEach(int => {
+            const h = int.hour;
+            // Traductor Termodinámico de kWh a kW (multiplicar por 4 en intervalos de 15 min)
+            const demandaKW_Sin = (int.consumption || 0) * 4;
+            const demandaKW_Con = Math.max(0, (int.gridImport || 0) * 4);
+
+            if (demandaKW_Sin > maxDemandaMensualSin[mes]) maxDemandaMensualSin[mes] = demandaKW_Sin;
+            if (demandaKW_Con > maxDemandaMensualCon[mes]) maxDemandaMensualCon[mes] = demandaKW_Con;
+
+            // Clasificación Horaria (GDMTH)
+            let periodo = 'int';
+            if (diaSemana === 0 || diaSemana === 6) {
+                if (h >= 0 && h < 6) periodo = 'base';
+            } else {
+                if (h >= 0 && h < 6) periodo = 'base';
+                else if (h >= 20 && h < 22) periodo = 'punta';
+            }
+
+            energiaMensualSin[mes][periodo] += (int.consumption || 0);
+            energiaMensualCon[mes][periodo] += Math.max(0, int.gridImport || 0);
+        });
+    });
+
+    // Facturación Mes a Mes
+    for (let i = 0; i < 12; i++) {
+        // Cargos por Demanda (Fijos)
+        const cargoDemandaSin = (maxDemandaMensualSin[i] * t.demanda.distribucion) + (maxDemandaMensualSin[i] * t.demanda.capacidad);
+        const cargoDemandaCon = (maxDemandaMensualCon[i] * t.demanda.distribucion) + (maxDemandaMensualCon[i] * t.demanda.capacidad);
+
+        // Cargos por Energía Volumétrica
+        let cargoEnergiaSin = 0;
+        let cargoEnergiaCon = 0;
+
+        if (tipoTarifa === 'gdmth') {
+            cargoEnergiaSin = (energiaMensualSin[i].base * t.energia.base) + (energiaMensualSin[i].int * t.energia.intermedia) + (energiaMensualSin[i].punta * t.energia.punta);
+            cargoEnergiaCon = (energiaMensualCon[i].base * t.energia.base) + (energiaMensualCon[i].int * t.energia.intermedia) + (energiaMensualCon[i].punta * t.energia.punta);
+        } else {
+            // GDMTO: Suma plana
+            const sumaSin = energiaMensualSin[i].base + energiaMensualSin[i].int + energiaMensualSin[i].punta;
+            const sumaCon = energiaMensualCon[i].base + energiaMensualCon[i].int + energiaMensualCon[i].punta;
+            cargoEnergiaSin = sumaSin * t.energia.unica;
+            cargoEnergiaCon = sumaCon * t.energia.unica;
+        }
+
+        costoAnualSin += (cargoDemandaSin + cargoEnergiaSin);
+        costoAnualCon += (cargoDemandaCon + cargoEnergiaCon);
+    }
+
+    return { gastoOriginal: costoAnualSin, gastoNuevo: costoAnualCon, ahorroAnual: costoAnualSin - costoAnualCon };
 }
