@@ -149,14 +149,14 @@ async function runSimulation() {
         }
 
         const capacidadReal = config.capacidadBateria > 0 ? config.capacidadBateria : 0.001;
-
-        // 🟢 Única ejecución real de la simulación del año
+        
+        // 🟢 FIX: Revertimos al clima original para no envenenar la termodinámica con NaNs
         const yearlySimulation = simulateYear({
             ...config,
-            hourlyWeather,
+            hourlyWeather: hourlyWeather, // Volvemos a pasar el archivo original
             annualConsumption: currentCsvData,
             batteryConfig: {
-                capacityKWh: capacidadReal, 
+                capacityKWh: config.capacidadBateria,
                 initialSOC: config.socInicial / 100
             }
         });
@@ -440,6 +440,56 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    // UBICACIÓN: main.js -> Dentro del DOMContentLoaded
+
+    // 🟢 FIX: Reactividad en Tiempo Real para el CAPEX
+    const inputsFinancieros = [
+        'area', 'eficiencia', 'tracking', 'enfriamiento', 
+        'inversorAC', 'capacidadBateria', 
+        'costoPanelWp', 'costoInversorKW', 'costoBateriaKWh'
+    ];
+
+    inputsFinancieros.forEach(id => {
+        const elemento = document.getElementById(id);
+        if (elemento) {
+            // Escuchamos tanto el tecleo como el cambio de menús desplegables
+            ['input', 'change'].forEach(evento => {
+                elemento.addEventListener(evento, () => {
+                    const config = getConfigFromUI();
+                    calcularFinanzas(config, config.capacidadBateria);
+                });
+            });
+        }
+    });
+
+    // 🟢 FIX: Controles temporales mutuamente excluyentes
+    const comboEstacion = document.getElementById('estacion');
+    const comboTipoDia = document.getElementById('tipoDia');
+    const inputFecha = document.getElementById('diaEspecifico');
+
+    // Si el usuario cambia la estación o el tipo de día, borramos la fecha exacta
+    const limpiarFechaExacta = () => { if(inputFecha) inputFecha.value = ''; };
+    comboEstacion?.addEventListener('change', limpiarFechaExacta);
+    comboTipoDia?.addEventListener('change', limpiarFechaExacta);
+
+    // Redibujado en tiempo real al cambiar cualquier control
+    ['estacion', 'tipoDia', 'diaEspecifico'].forEach(id => {
+        document.getElementById(id)?.addEventListener('change', () => {
+            
+            if (window.yearlySimulationObj) {
+                // Extraemos el día (Ahora sí respetará lo que el usuario quiere ver)
+                const nuevoDia = getSelectedDay(window.yearlySimulationObj.dailyResults);
+                
+                // Destruimos y redibujamos
+                createPowerChart('powerChart', nuevoDia);
+                createNetLoadChart('netLoadChart', nuevoDia);
+                createBatteryChart('batteryChart', nuevoDia);
+                createIrradianceChart('irradianceChart', nuevoDia);
+                createTemperatureChart('temperatureChart', nuevoDia);
+            }
+        });
+    });
 
     // 🟢 Alternador Visual: Módulo Express vs CSV
     document.querySelectorAll('input[name="fuenteDemanda"]').forEach(radio => {

@@ -76,6 +76,32 @@
                             </select>
                         </div>
 
+                        <div class="input-group full-width mt-3">
+                            <label>Explorador Temporal de Gráficas</label>
+                            <div class="input-grid">
+                                <div class="input-group">
+                                    <label for="estacion">Estación</label>
+                                    <select id="estacion">
+                                        <option value="primavera">Primavera</option>
+                                        <option value="verano" selected>Verano</option>
+                                        <option value="otono">Otoño</option>
+                                        <option value="invierno">Invierno</option>
+                                    </select>
+                                </div>
+                                <div class="input-group">
+                                    <label for="tipoDia">Tipo de Día</label>
+                                    <select id="tipoDia">
+                                        <option value="semana" selected>Día Hábil</option>
+                                        <option value="fin_semana">Fin de Semana</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="input-group mt-2">
+                                <label for="diaEspecifico">O Saltar a Fecha Exacta</label>
+                                <input type="date" id="diaEspecifico" value="2026-06-21">
+                            </div>
+                        </div>
+
                         <div class="input-group full-width mt-2">
                             <label for="climaEspecifico">Condición Meteorológica</label>
                             <select id="climaEspecifico">

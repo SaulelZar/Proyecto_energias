@@ -121,29 +121,37 @@ export function actualizarKPIsFinancieros(finanzas, capexTotal, simulacion, conf
 }
 
 export function calcularFinanzas(config, capacidadBateriaReal) {
+    // 1. Cálculos base
     const potenciaKWp = config.panelArea * config.nominalEfficiency; 
     const unitPanel = getInputValue('costoPanelWp', 6.00);
     const unitBateria = getInputValue('costoBateriaKWh', 7000);
     const unitInversor = getInputValue('costoInversorKW', 2000);
 
-    // 🟢 EL COSTO RESPONDE DIRECTAMENTE AL TIPO DE SEGUIDOR Y ENFRIAMIENTO (Justificación al Profesor)
+    // 2. Multiplicadores de Complejidad Mecánica (Trackers)
     let factorEstructura = 1.0; 
-    if (config.panelTilt > 35 && config.tracking === 'fixed') factorEstructura = 1.10; 
-    if (config.tracking === 'single') factorEstructura = 1.15; 
-    if (config.tracking === 'dual') factorEstructura = 1.35;   
+    if (config.tracking === 'single') factorEstructura = 1.15;  // +15% por motores y un eje
+    if (config.tracking === 'dual') factorEstructura = 1.35;    // +35% por estructura giroscópica
 
+    // 3. Multiplicadores de Complejidad Térmica (Enfriamiento)
     let factorEnfriamiento = 1.0; 
-    if (config.coolingType === 'active_air') factorEnfriamiento = 1.08; 
-    if (config.coolingType === 'active_water') factorEnfriamiento = 1.25; 
+    if (config.coolingType === 'passive') factorEnfriamiento = 1.05;      // 🟢 FIX: Faltaba el pasivo (+5%)
+    if (config.coolingType === 'active_air') factorEnfriamiento = 1.10;   // +10% ventiladores
+    if (config.coolingType === 'active_water') factorEnfriamiento = 1.25; // +25% bombas e irrigación
 
+    // 4. Cálculo de CAPEX
     const capexFV = potenciaKWp * 1000 * unitPanel * factorEstructura * factorEnfriamiento;
     const capexBESS = capacidadBateriaReal * unitBateria;
     const capexInversor = config.inverterAC * unitInversor;
 
-    const totalCAPEX = (capexFV + capexBESS + capexInversor) * 1.15;
+    const totalCAPEX = (capexFV + capexBESS + capexInversor) * 1.15; // BOS 15%
 
+    // 5. Inyección al DOM
     const kpiElement = document.getElementById('kpiCapex');
-    if (kpiElement) kpiElement.textContent = totalCAPEX.toLocaleString('es-MX', { style: 'currency', currency: 'MXN', minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ' MXN';
+    if (kpiElement) {
+        kpiElement.textContent = totalCAPEX.toLocaleString('es-MX', { 
+            style: 'currency', currency: 'MXN', minimumFractionDigits: 0, maximumFractionDigits: 0 
+        });
+    }
     
     return totalCAPEX;
 }
